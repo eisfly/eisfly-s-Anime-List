@@ -3,68 +3,118 @@ import { ANIME_LIST, CATEGORIES } from './constants';
 import { Anime, Category } from './types';
 
 /* =========================
-   THEMED SCROLLBAR + SEARCH + SELECT CSS
+   THEMED CSS (keine JSX-Template-Probleme mehr)
 ========================= */
-  <style>{`
-    .themed-scrollbar { scrollbar-width: thin; scrollbar-color: rgba(234,179,8,0.55) rgba(234,179,8,0.10); }
-    .themed-scrollbar::-webkit-scrollbar { width: 10px; height: 10px; }
-    .themed-scrollbar::-webkit-scrollbar-track { background: rgba(234,179,8,0.10); border-radius: 999px; }
-    .themed-scrollbar::-webkit-scrollbar-thumb { background: rgba(234,179,8,0.40); border-radius: 999px; border: 2px solid rgba(0,0,0,0.60); }
-    .themed-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(234,179,8,0.62); }
+const THEME_CSS = `
+  /* ===== Scrollbars ===== */
+  .themed-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(234,179,8,0.55) rgba(234,179,8,0.10);
+  }
+  .themed-scrollbar::-webkit-scrollbar { width: 10px; height: 10px; }
+  .themed-scrollbar::-webkit-scrollbar-track {
+    background: rgba(234,179,8,0.10);
+    border-radius: 999px;
+  }
+  .themed-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(234,179,8,0.40);
+    border-radius: 999px;
+    border: 2px solid rgba(0,0,0,0.60);
+  }
+  .themed-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(234,179,8,0.62); }
 
-    .themed-scrollbar-sm { scrollbar-width: thin; scrollbar-color: rgba(234,179,8,0.48) rgba(234,179,8,0.08); }
-    .themed-scrollbar-sm::-webkit-scrollbar { width: 8px; height: 8px; }
-    .themed-scrollbar-sm::-webkit-scrollbar-track { background: rgba(234,179,8,0.08); border-radius: 999px; }
-    .themed-scrollbar-sm::-webkit-scrollbar-thumb { background: rgba(234,179,8,0.34); border-radius: 999px; border: 2px solid rgba(0,0,0,0.65); }
-    .themed-scrollbar-sm::-webkit-scrollbar-thumb:hover { background: rgba(234,179,8,0.55); }
+  .themed-scrollbar-sm {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(234,179,8,0.48) rgba(234,179,8,0.08);
+  }
+  .themed-scrollbar-sm::-webkit-scrollbar { width: 8px; height: 8px; }
+  .themed-scrollbar-sm::-webkit-scrollbar-track {
+    background: rgba(234,179,8,0.08);
+    border-radius: 999px;
+  }
+  .themed-scrollbar-sm::-webkit-scrollbar-thumb {
+    background: rgba(234,179,8,0.34);
+    border-radius: 999px;
+    border: 2px solid rgba(0,0,0,0.65);
+  }
+  .themed-scrollbar-sm::-webkit-scrollbar-thumb:hover { background: rgba(234,179,8,0.55); }
 
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-    .scroll-snap-align-center { scroll-snap-align: center; }
-    .kinetic-rail { scroll-snap-type: x mandatory; scroll-behavior: smooth; }
+  .scroll-snap-align-center { scroll-snap-align: center; }
+  .kinetic-rail { scroll-snap-type: x mandatory; scroll-behavior: smooth; }
 
-    .search-shell {
-      position: relative; border-radius: 18px; padding: 1px;
-      background: radial-gradient(120% 120% at 20% 0%, rgba(234,179,8,0.35), transparent 55%),
-                  linear-gradient(90deg, rgba(234,179,8,0.30), rgba(234,179,8,0.06), rgba(234,179,8,0.30));
-      box-shadow: 0 18px 60px rgba(0,0,0,0.45);
-    }
-    .search-inner {
-      border-radius: 17px;
-      background: linear-gradient(180deg, rgba(0,0,0,0.40), rgba(0,0,0,0.20));
-      border: 1px solid rgba(255,255,255,0.06);
-      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-    }
-    .search-input { width: 100%; outline: none; background: transparent; color: rgba(255,255,255,0.88); }
-    .search-input::placeholder { color: rgba(234,179,8,0.28); letter-spacing: 0.10em; }
-    .search-shell:focus-within {
-      background: radial-gradient(120% 120% at 20% 0%, rgba(234,179,8,0.50), transparent 55%),
-                  linear-gradient(90deg, rgba(234,179,8,0.55), rgba(234,179,8,0.10), rgba(234,179,8,0.55));
-      box-shadow: 0 22px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(234,179,8,0.20), 0 0 40px rgba(234,179,8,0.18);
-    }
-    .search-shell:focus-within .search-inner { border-color: rgba(234,179,8,0.22); }
-    .search-kbd { border: 1px solid rgba(234,179,8,0.18); background: rgba(234,179,8,0.08); color: rgba(234,179,8,0.75); }
+  /* ===== Themed Search ===== */
+  .search-shell {
+    position: relative;
+    border-radius: 18px;
+    padding: 1px;
+    background: radial-gradient(120% 120% at 20% 0%, rgba(234,179,8,0.35), transparent 55%),
+                linear-gradient(90deg, rgba(234,179,8,0.30), rgba(234,179,8,0.06), rgba(234,179,8,0.30));
+    box-shadow: 0 18px 60px rgba(0,0,0,0.45);
+  }
+  .search-inner {
+    border-radius: 17px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.40), rgba(0,0,0,0.20));
+    border: 1px solid rgba(255,255,255,0.06);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  .search-input {
+    width: 100%;
+    outline: none;
+    background: transparent;
+    color: rgba(255,255,255,0.88);
+  }
+  .search-input::placeholder {
+    color: rgba(234,179,8,0.28);
+    letter-spacing: 0.10em;
+  }
+  .search-shell:focus-within {
+    background: radial-gradient(120% 120% at 20% 0%, rgba(234,179,8,0.50), transparent 55%),
+                linear-gradient(90deg, rgba(234,179,8,0.55), rgba(234,179,8,0.10), rgba(234,179,8,0.55));
+    box-shadow: 0 22px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(234,179,8,0.20), 0 0 40px rgba(234,179,8,0.18);
+  }
+  .search-shell:focus-within .search-inner { border-color: rgba(234,179,8,0.22); }
+  .search-kbd {
+    border: 1px solid rgba(234,179,8,0.18);
+    background: rgba(234,179,8,0.08);
+    color: rgba(234,179,8,0.75);
+  }
 
-    .select-shell {
-      position: relative; border-radius: 18px; padding: 1px;
-      background: radial-gradient(120% 120% at 20% 0%, rgba(234,179,8,0.28), transparent 55%),
-                  linear-gradient(90deg, rgba(234,179,8,0.26), rgba(234,179,8,0.05), rgba(234,179,8,0.26));
-      box-shadow: 0 18px 60px rgba(0,0,0,0.35);
-    }
-    .select-inner {
-      border-radius: 17px;
-      background: linear-gradient(180deg, rgba(0,0,0,0.38), rgba(0,0,0,0.18));
-      border: 1px solid rgba(255,255,255,0.06);
-      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-    }
-    .genre-select {
-      width: 100%; outline: none; background: transparent; color: rgba(255,255,255,0.88);
-      appearance: none; -webkit-appearance: none; -moz-appearance: none;
-    }
-    .genre-select option { background: #0a0a0a; color: rgba(255,255,255,0.9); }
-  `}</style>
-);
+  /* ===== Themed Select (Genre Filter) ===== */
+  .select-shell {
+    position: relative;
+    border-radius: 18px;
+    padding: 1px;
+    background: radial-gradient(120% 120% at 20% 0%, rgba(234,179,8,0.28), transparent 55%),
+                linear-gradient(90deg, rgba(234,179,8,0.26), rgba(234,179,8,0.05), rgba(234,179,8,0.26));
+    box-shadow: 0 18px 60px rgba(0,0,0,0.35);
+  }
+  .select-inner {
+    border-radius: 17px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.38), rgba(0,0,0,0.18));
+    border: 1px solid rgba(255,255,255,0.06);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  .genre-select {
+    width: 100%;
+    outline: none;
+    background: transparent;
+    color: rgba(255,255,255,0.88);
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+  }
+  .genre-select option {
+    background: #0a0a0a;
+    color: rgba(255,255,255,0.9);
+  }
+`;
+
+const ThemedStyles = () => <style>{THEME_CSS}</style>;
 
 /* =========================
    CURSOR
@@ -209,14 +259,13 @@ export default function App() {
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const getAnimeKey = useCallback((a: Anime) => String(a.id), []);
-  const GOOD_ANIME_KEY = Category.GOOD; // "Good Anime"
 
-  // ✅ Charlotte IMMER "Good Anime" (und ersetzt alte Charlotte aus Peak/Goat/etc)
+  // Charlotte: immer Good Anime (und ersetzt vorhandene Charlotte, egal ob Peak/Goat/etc)
   const CHARLOTTE: Anime = useMemo(
     () => ({
       id: 'charlotte',
       title: 'Charlotte',
-      category: GOOD_ANIME_KEY,
+      category: Category.GOOD,
       genres: ['Drama', 'Supernatural', 'School', 'Comedy'],
       description:
         'A boy discovers his supernatural ability—and gets pulled into a secret war between gifted teenagers. Emotional, weird, and worth the ride.',
@@ -225,7 +274,7 @@ export default function App() {
       releaseYear: 2015,
       status: 'Finished',
     }),
-    [GOOD_ANIME_KEY]
+    []
   );
 
   const LIST_WITH_FIXED_CHARLOTTE: Anime[] = useMemo(() => {
@@ -297,16 +346,13 @@ export default function App() {
       observer = new IntersectionObserver(
         (entries) => {
           let best: { id: string; ratio: number } | null = null;
-
           for (const entry of entries) {
             if (!entry.isIntersecting) continue;
             const id = entry.target.getAttribute('data-id');
             if (!id) continue;
-
             const ratio = entry.intersectionRatio ?? 0;
             if (!best || ratio > best.ratio) best = { id, ratio };
           }
-
           if (best) setHoveredId(best.id);
         },
         { root, threshold: [0.5, 0.6, 0.7], rootMargin: '0px -40% 0px -40%' }
@@ -590,17 +636,6 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 md:gap-5 mb-6">
-                <div className="rounded-2xl border border-white/10 bg-black/25 p-4 md:p-5">
-                  <p className="text-xs text-white/40 font-semibold tracking-wide mb-1">Release</p>
-                  <p className="text-xl md:text-2xl font-black text-yellow-300">{selectedAnime.releaseYear}</p>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-black/25 p-4 md:p-5">
-                  <p className="text-xs text-white/40 font-semibold tracking-wide mb-1">Status</p>
-                  <p className="text-xl md:text-2xl font-black text-yellow-300 uppercase">{selectedAnime.status}</p>
-                </div>
-              </div>
-
               <div className="rounded-2xl border border-white/10 bg-black/25 p-4 md:p-6 mb-7">
                 <p className="text-sm font-semibold text-white/70 mb-2">Description</p>
                 <p className="text-sm md:text-base text-white/70 leading-relaxed">“{selectedAnime.description}”</p>
@@ -610,7 +645,11 @@ export default function App() {
                 <button
                   className="flex-1 rounded-2xl py-3.5 px-6 bg-yellow-500 text-black font-black text-sm hover:bg-yellow-400 transition-all duration-200 shadow-[0_12px_40px_rgba(234,179,8,0.18)]"
                   onClick={() =>
-                    window.open(`https://myanimelist.net/search/all?q=${encodeURIComponent(selectedAnime.title)}`, '_blank', 'noopener,noreferrer')
+                    window.open(
+                      `https://myanimelist.net/search/all?q=${encodeURIComponent(selectedAnime.title)}`,
+                      '_blank',
+                      'noopener,noreferrer'
+                    )
                   }
                 >
                   Explore
@@ -627,25 +666,6 @@ export default function App() {
           </div>
         </div>
       )}
-
-      <footer className="fixed bottom-0 left-0 right-0 p-4 md:p-10 flex justify-between items-end pointer-events-none z-40">
-        <div />
-        <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-white/10 bg-black/35 backdrop-blur-xl px-4 py-2">
-          <div className="flex gap-2 items-center">
-            {CATEGORIES.map((_, i) => (
-              <div
-                key={i}
-                className={`w-1.5 h-1.5 rounded-full transition-all duration-500 ${
-                  CATEGORIES.indexOf(selectedCategory) === i
-                    ? 'bg-yellow-400 shadow-[0_0_12px_rgba(234,179,8,0.9)] scale-125'
-                    : 'bg-white/15'
-                }`}
-              />
-            ))}
-          </div>
-          <span className="text-xs text-white/35 font-semibold tracking-wide">Archive</span>
-        </div>
-      </footer>
     </div>
   );
 }
