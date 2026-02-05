@@ -245,7 +245,7 @@ export default function App() {
                         </p>
                       ) : (
                         <div className="text-lg text-gray-100 italic bg-gray-900/60 px-6 py-4 rounded-xl border border-gray-700/50">
-                          {selectedAnime.comment || 'Noch keine Notizen...'}
+                          {selectedAnime.comment || 'no comment rn...'}
                         </div>
                       )}
                     </div>
