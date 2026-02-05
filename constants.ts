@@ -284,9 +284,13 @@ export default function App() {
     '📝 My Comment: (hier kommt später dein Kommentar rein — z.B. warum der Anime ein GOAT ist)';
 
   const railRef = useRef<HTMLDivElement>(null);
-  const cardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
-  // ✅ Ziel: Charlotte NUR im Filter "Good Anime" (nicht in All)
+  // ✅ Wichtig: Keys überall als string -> verhindert Hover/Active Bugs
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  const getAnimeKey = useCallback((a: Anime) => String(a.id), []);
+
+  // ✅ Ziel: Charlotte NUR im Filter "Good Anime"
   const GOOD_ANIME_KEY = useMemo(() => {
     const exact = CATEGORIES.find((c) => c === 'Good Anime');
     if (exact) return exact;
@@ -294,25 +298,25 @@ export default function App() {
     const lower = CATEGORIES.find((c) => c.toLowerCase() === 'good anime');
     if (lower) return lower;
 
-    // fallback (falls du es so benannt hast)
     const alt = CATEGORIES.find((c) => c.toLowerCase().includes('good') && c.toLowerCase().includes('anime'));
     return alt ?? 'Good Anime';
   }, []);
 
   // ✅ Charlotte Objekt (Category = Good Anime)
   const CHARLOTTE: Anime = useMemo(
-    () => ({
-      id: 'charlotte',
-      title: 'Charlotte',
-      description:
-        'A boy discovers his supernatural ability—and gets pulled into a secret war between gifted teenagers. Emotional, weird, and worth the ride.',
-      coverImageURL:
-        'https://images.unsplash.com/photo-1541963463532-d68292c34b19?auto=format&fit=crop&w=1200&q=60', // Placeholder: ersetz mit echtem Cover
-      genres: ['Drama', 'Supernatural', 'School', 'Comedy'],
-      releaseYear: 2015,
-      status: 'Finished',
-      category: GOOD_ANIME_KEY,
-    }),
+    () =>
+      ({
+        id: 'charlotte',
+        title: 'Charlotte',
+        description:
+          'A boy discovers his supernatural ability—and gets pulled into a secret war between gifted teenagers. Emotional, weird, and worth the ride.',
+        coverImageURL:
+          'https://images.unsplash.com/photo-1541963463532-d68292c34b19?auto=format&fit=crop&w=1200&q=60',
+        genres: ['Drama', 'Supernatural', 'School', 'Comedy'],
+        releaseYear: 2015,
+        status: 'Finished',
+        category: GOOD_ANIME_KEY,
+      } as Anime),
     [GOOD_ANIME_KEY]
   );
 
@@ -328,20 +332,20 @@ export default function App() {
     return existsByTitle || existsById ? base : [...base, CHARLOTTE];
   }, [selectedCategory, GOOD_ANIME_KEY, CHARLOTTE]);
 
-  // ✅ Genre Dropdown: aus der aktuell aktiven Liste generieren (inkl. Charlotte wenn Good Anime aktiv)
+  // ✅ Genre Dropdown: aus der aktuell aktiven Liste (inkl. Charlotte wenn Good Anime aktiv)
   const ALL_GENRES = useMemo(() => {
     const set = new Set<string>();
     ACTIVE_LIST.forEach((a) => a.genres.forEach((g) => set.add(g)));
     return ['All', ...Array.from(set).sort((a, b) => a.localeCompare(b))];
   }, [ACTIVE_LIST]);
 
-  // ✅ Wenn Genre nach Category-Wechsel nicht mehr existiert, reset
+  // ✅ Wenn Genre nach Category-Wechsel nicht mehr existiert -> reset
   useEffect(() => {
     if (selectedGenre === 'All') return;
     if (!ALL_GENRES.includes(selectedGenre)) setSelectedGenre('All');
   }, [ALL_GENRES, selectedGenre]);
 
-  // ✅ Final Filter: Category + Search + Genre (Genre filtert auch die hinzugefügten Anime)
+  // ✅ Final Filter: Category + Search + Genre
   const filteredAnime = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
 
@@ -376,7 +380,7 @@ export default function App() {
     if (window.innerWidth >= 768) setHoveredId(null);
   }, []);
 
-  // ✅ Mobile observer: erst nach render starten (damit refs wirklich da sind)
+  // ✅ Mobile observer: nach render starten (refs sind dann vorhanden)
   useEffect(() => {
     if (window.innerWidth >= 768) return;
 
@@ -431,7 +435,7 @@ export default function App() {
 
   const closeFocus = useCallback(() => setSelectedAnime(null), []);
 
-  // ✅ Trailer Button bleibt drin (muss nicht in Daten sein)
+  // ✅ Trailer Button bleibt (Daten müssen keinen trailerUrl haben)
   const openExternalTrailer = (anime: Anime) => {
     const query = encodeURIComponent(anime.title + ' official trailer anime');
     window.open(`https://www.youtube.com/results?search_query=${query}`, '_blank', 'noopener,noreferrer');
@@ -590,24 +594,27 @@ export default function App() {
               </h2>
             </div>
           ) : (
-            filteredAnime.map((anime) => (
-              <div key={anime.id} data-id={anime.id} className="scroll-snap-align-center">
-                <AnimeCard
-                  anime={anime}
-                  isHovered={hoveredId === anime.id}
-                  onClick={() => {
-                    if (window.innerWidth < 768 && hoveredId !== anime.id) {
-                      setHoveredId(anime.id);
-                    } else {
-                      setSelectedAnime(anime);
-                    }
-                  }}
-                  cardRef={(el) => {
-                    cardRefs.current[anime.id] = el;
-                  }}
-                />
-              </div>
-            ))
+            filteredAnime.map((anime) => {
+              const key = getAnimeKey(anime);
+              return (
+                <div key={key} data-id={key} className="scroll-snap-align-center">
+                  <AnimeCard
+                    anime={anime}
+                    isHovered={hoveredId === key}
+                    onClick={() => {
+                      if (window.innerWidth < 768 && hoveredId !== key) {
+                        setHoveredId(key);
+                      } else {
+                        setSelectedAnime(anime);
+                      }
+                    }}
+                    cardRef={(el) => {
+                      cardRefs.current[key] = el;
+                    }}
+                  />
+                </div>
+              );
+            })
           )}
         </main>
       )}
