@@ -3,10 +3,11 @@ import { ANIME_LIST, CATEGORIES } from './constants';
 import { Anime } from './types';
 
 /* =========================
-   THEMED SCROLLBAR CSS
+   THEMED SCROLLBAR + SEARCH CSS
 ========================= */
-const ThemedScrollbarStyles = () => (
+const ThemedStyles = () => (
   <style>{`
+    /* ===== Scrollbars ===== */
     .themed-scrollbar {
       scrollbar-width: thin;
       scrollbar-color: rgba(234,179,8,0.55) rgba(234,179,8,0.10);
@@ -44,6 +45,46 @@ const ThemedScrollbarStyles = () => (
 
     .scroll-snap-align-center { scroll-snap-align: center; }
     .kinetic-rail { scroll-snap-type: x mandatory; scroll-behavior: smooth; }
+
+    /* ===== Themed Search ===== */
+    .search-shell {
+      position: relative;
+      border-radius: 18px;
+      padding: 1px; /* gradient border thickness */
+      background: radial-gradient(120% 120% at 20% 0%, rgba(234,179,8,0.35), transparent 55%),
+                  linear-gradient(90deg, rgba(234,179,8,0.30), rgba(234,179,8,0.06), rgba(234,179,8,0.30));
+      box-shadow: 0 18px 60px rgba(0,0,0,0.45);
+    }
+    .search-inner {
+      border-radius: 17px;
+      background: linear-gradient(180deg, rgba(0,0,0,0.40), rgba(0,0,0,0.20));
+      border: 1px solid rgba(255,255,255,0.06);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    .search-input {
+      width: 100%;
+      outline: none;
+      background: transparent;
+      color: rgba(255,255,255,0.88);
+    }
+    .search-input::placeholder {
+      color: rgba(234,179,8,0.28);
+      letter-spacing: 0.10em;
+    }
+    .search-shell:focus-within {
+      background: radial-gradient(120% 120% at 20% 0%, rgba(234,179,8,0.50), transparent 55%),
+                  linear-gradient(90deg, rgba(234,179,8,0.55), rgba(234,179,8,0.10), rgba(234,179,8,0.55));
+      box-shadow: 0 22px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(234,179,8,0.20), 0 0 40px rgba(234,179,8,0.18);
+    }
+    .search-shell:focus-within .search-inner {
+      border-color: rgba(234,179,8,0.22);
+    }
+    .search-kbd {
+      border: 1px solid rgba(234,179,8,0.18);
+      background: rgba(234,179,8,0.08);
+      color: rgba(234,179,8,0.75);
+    }
   `}</style>
 );
 
@@ -308,10 +349,10 @@ export default function App() {
 
   return (
     <div className="relative h-screen w-screen text-white overflow-hidden select-none bg-[#050505]">
-      <ThemedScrollbarStyles />
+      <ThemedStyles />
       <Cursor />
 
-      {/* BACKGROUND (modern, not boring) */}
+      {/* BACKGROUND */}
       <div className="absolute inset-0 pointer-events-none z-0">
         <div className="absolute inset-0 bg-gradient-to-br from-[#070707] via-[#040404] to-[#0b0708]" />
         <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-[130vw] h-[75vh] rounded-full blur-[120px] opacity-[0.18] bg-[radial-gradient(circle_at_center,rgba(234,179,8,0.55),transparent_60%)]" />
@@ -325,9 +366,8 @@ export default function App() {
         <div className="mx-auto max-w-[1920px] px-4 md:px-10 pt-4 md:pt-6">
           <div className="bg-black/55 backdrop-blur-xl border border-yellow-500/12 rounded-3xl shadow-[0_20px_80px_rgba(0,0,0,0.55)]">
             <div className="px-4 md:px-6 py-4 md:py-5">
-              {/* Layout: stack on mobile, 3 columns on desktop */}
               <div className="grid grid-cols-1 lg:grid-cols-[auto,1fr,360px] gap-4 md:gap-5 items-center">
-                {/* Brand (Omega entfernt) */}
+                {/* Brand */}
                 <div className="min-w-0">
                   <h1 className="text-base md:text-lg font-black tracking-tight text-yellow-400 whitespace-nowrap">
                     EISFLY´S ARCHIVE
@@ -365,25 +405,34 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Search (mehr Platz, nicht eingequetscht) */}
-                <div className="relative w-full lg:w-[360px] min-w-0">
-                  <div className="absolute inset-y-0 left-3 flex items-center text-yellow-400/70">
-                    <span className="text-sm">⌕</span>
+                {/* Search (now fully themed) */}
+                <div className="w-full lg:w-[360px] min-w-0">
+                  <div className="search-shell">
+                    <div className="search-inner flex items-center gap-3 px-3 py-2.5">
+                      {/* icon */}
+                      <div className="w-9 h-9 rounded-xl bg-yellow-500/10 border border-yellow-500/15 flex items-center justify-center text-yellow-300 shadow-[0_0_18px_rgba(234,179,8,0.12)]">
+                        ⌕
+                      </div>
+
+                      <input
+                        type="text"
+                        placeholder="SEARCHING..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="search-input text-[14px] md:text-[14px] font-semibold tracking-wide"
+                      />
+
+                      {/* hint badge (desktop only) */}
+                      <div className="hidden lg:flex items-center gap-2">
+                        <span className="search-kbd text-[11px] font-bold rounded-lg px-2 py-1">Enter</span>
+                      </div>
+                    </div>
                   </div>
-                  <input
-                    type="text"
-                    placeholder="SEARCHING..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="
-                      w-full rounded-2xl bg-white/6 border border-white/12
-                      pl-10 pr-4 py-3.5
-                      text-sm md:text-[14px]
-                      outline-none transition-all
-                      focus:border-yellow-500/35 focus:bg-white/8
-                      placeholder:text-white/30 text-white/85
-                    "
-                  />
+
+                  {/* subtle helper line */}
+                  <p className="mt-2 text-[11px] text-white/28 hidden md:block">
+                    Tip: type a title to filter instantly ✨
+                  </p>
                 </div>
               </div>
             </div>
@@ -549,51 +598,4 @@ export default function App() {
                   "
                   onClick={() =>
                     window.open(
-                      `https://myanimelist.net/search/all?q=${encodeURIComponent(selectedAnime.title)}`,
-                      '_blank',
-                      'noopener,noreferrer'
-                    )
-                  }
-                >
-                  Explore
-                </button>
-
-                <button
-                  className="
-                    flex-1 rounded-2xl py-3.5 px-6
-                    border border-yellow-500/35 bg-white/5 text-yellow-200 font-black text-sm
-                    hover:bg-yellow-500 hover:text-black hover:border-yellow-400/30
-                    transition-all duration-200
-                  "
-                  onClick={() => openExternalTrailer(selectedAnime)}
-                >
-                  Trailer
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* FOOTER */}
-      <footer className="fixed bottom-0 left-0 right-0 p-4 md:p-10 flex justify-between items-end pointer-events-none z-40">
-        <div />
-        <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-white/10 bg-black/35 backdrop-blur-xl px-4 py-2">
-          <div className="flex gap-2 items-center">
-            {CATEGORIES.map((_, i) => (
-              <div
-                key={i}
-                className={`w-1.5 h-1.5 rounded-full transition-all duration-500 ${
-                  CATEGORIES.indexOf(selectedCategory) === i
-                    ? 'bg-yellow-400 shadow-[0_0_12px_rgba(234,179,8,0.9)] scale-125'
-                    : 'bg-white/15'
-                }`}
-              />
-            ))}
-          </div>
-          <span className="text-xs text-white/35 font-semibold tracking-wide">Archive</span>
-        </div>
-      </footer>
-    </div>
-  );
-}
+                      `https://myanimelist.net/se
