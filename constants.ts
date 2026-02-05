@@ -103,7 +103,7 @@ export const ANIME_LIST: Anime[] = [
     category: Category.MUST_WATCH,
     genres: ['Action', 'Adventure', 'Historical'],
     description: 'A Viking epic centered on revenge, war, and the search for a land without conflict.',
-    coverImageURL: 'https://cdn.myanimelist.net/images/anime/1500/103005.jpg',
+    coverImageURL: 'https://aniworld.to/public/img/cover/vinland-saga-stream-cover-kvj59QiJ0zGSobFqvlF9MCrmDiXSHb9g_220x330.jpg',
     releaseYear: 2019,
     status: 'Ongoing',
     trailerUrl: 'https://www.youtube.com/watch?v=f8Tf89A96U0'
