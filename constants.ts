@@ -148,7 +148,7 @@ export const ANIME_LIST: Anime[] = [
     category: Category.GOATS,
     genres: ['Action', 'Fantasy', 'Adventure'],
     description: 'The weakest hunter in the world gains the ability to level up infinitely in a modern world plagued by dungeons.',
-    coverImageURL: 'https://static.wikia.nocookie.net/solo-leveling/images/3/3d/Solo_Leveling_%28First_Poster_Anime%29.jpg/revision/latest?cb=20240920105533',
+    coverImageURL: 'https://cdn.myanimelist.net/images/anime/1801/142390.jpg',
     releaseYear: 2024,
     status: 'Ongoing',
     trailerUrl: 'https://www.youtube.com/watch?v=V6P6v689Poc'
@@ -170,7 +170,7 @@ export const ANIME_LIST: Anime[] = [
     category: Category.GOATS,
     genres: ['Action', 'Fantasy', 'Drama'],
     description: 'After being cast into the abyss of trash, Rudo must fight for survival in a vibrant and dangerous wasteland.',
-    coverImageURL: 'https://static.wikia.nocookie.net/gachiakuta/images/8/88/Anime_Main_Visual_2.png/revision/latest?cb=20250606050608',
+    coverImageURL: 'https://cdn.myanimelist.net/images/anime/1682/150432.jpg',
     releaseYear: 2025,
     status: 'Ongoing'
   },
@@ -203,7 +203,7 @@ export const ANIME_LIST: Anime[] = [
     category: Category.PEAK,
     genres: ['Sci-Fi', 'Adventure', 'Comedy'],
     description: 'Thousands of years after humanity is petrified, Senku Ishigami uses science to rebuild civilization from scratch.',
-    coverImageURL: 'https://static.wikia.nocookie.net/dr-stone/images/c/cb/Anime_date_announcement.png/revision/latest?cb=20190110034129',
+    coverImageURL: 'https://cdn.myanimelist.net/images/anime/1613/102576.jpg',
     releaseYear: 2019,
     status: 'Ongoing',
     trailerUrl: 'https://www.youtube.com/watch?v=7v_pS6G_q2Y'
@@ -236,7 +236,7 @@ export const ANIME_LIST: Anime[] = [
     category: Category.PEAK,
     genres: ['Adventure', 'Fantasy', 'Drama'],
     description: 'An immortal elf reflects on the passage of time and the lives of her human companions after their great quest.',
-    coverImageURL: 'https://static.wikia.nocookie.net/frieren/images/8/80/Season_1_key_visual_3.png/revision/latest/scale-to-width-down/1200?cb=20230719173128',
+    coverImageURL: 'https://cdn.myanimelist.net/images/anime/1921/154528.jpg',
     releaseYear: 2023,
     status: 'Ongoing',
     trailerUrl: 'https://www.youtube.com/watch?v=q6D_76z24jM'
@@ -303,7 +303,7 @@ export const ANIME_LIST: Anime[] = [
     category: Category.GOOD,
     genres: ['Action', 'Comedy', 'Supernatural'],
     description: 'A burnt-out employee finds new life during a zombie apocalypse and decides to live his life to the fullest.',
-    coverImageURL: 'https://static.wikia.nocookie.net/zombie-100/images/9/9e/Anime_Key_Visual_1.jpg/revision/latest?cb=20230624103603',
+    coverImageURL: 'https://cdn.myanimelist.net/images/anime/1384/136408.jpg',
     releaseYear: 2023,
     status: 'Finished',
     trailerUrl: 'https://www.youtube.com/watch?v=7hXz60Tz-0U'
@@ -542,7 +542,7 @@ export const ANIME_LIST: Anime[] = [
     category: Category.UNDERRATED,
     genres: ['Action', 'Adventure', 'Mystery'],
     description: 'A small-time con artist gets swept up in a global operation of high-stakes deception and elaborate schemes.',
-    coverImageURL: 'https://static.wikia.nocookie.net/greatpretender/images/a/a8/Great_Pretender_-_First_key_visual.jpg/revision/latest?cb=20200129014822',
+    coverImageURL: 'https://cdn.myanimelist.net/images/anime/1418/107954.jpg',
     releaseYear: 2020,
     status: 'Finished'
   },
