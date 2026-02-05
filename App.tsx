@@ -598,4 +598,51 @@ export default function App() {
                   "
                   onClick={() =>
                     window.open(
-                      `https://myanimelist.net/se
+                      `https://myanimelist.net/search/all?q=${encodeURIComponent(selectedAnime.title)}`,
+                      '_blank',
+                      'noopener,noreferrer'
+                    )
+                  }
+                >
+                  Explore
+                </button>
+
+                <button
+                  className="
+                    flex-1 rounded-2xl py-3.5 px-6
+                    border border-yellow-500/35 bg-white/5 text-yellow-200 font-black text-sm
+                    hover:bg-yellow-500 hover:text-black hover:border-yellow-400/30
+                    transition-all duration-200
+                  "
+                  onClick={() => openExternalTrailer(selectedAnime)}
+                >
+                  Trailer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* FOOTER */}
+      <footer className="fixed bottom-0 left-0 right-0 p-4 md:p-10 flex justify-between items-end pointer-events-none z-40">
+        <div />
+        <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-white/10 bg-black/35 backdrop-blur-xl px-4 py-2">
+          <div className="flex gap-2 items-center">
+            {CATEGORIES.map((_, i) => (
+              <div
+                key={i}
+                className={`w-1.5 h-1.5 rounded-full transition-all duration-500 ${
+                  CATEGORIES.indexOf(selectedCategory) === i
+                    ? 'bg-yellow-400 shadow-[0_0_12px_rgba(234,179,8,0.9)] scale-125'
+                    : 'bg-white/15'
+                }`}
+              />
+            ))}
+          </div>
+          <span className="text-xs text-white/35 font-semibold tracking-wide">Archive</span>
+        </div>
+      </footer>
+    </div>
+  );
+}
