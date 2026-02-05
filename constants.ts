@@ -1,671 +1,651 @@
-import { Anime, Category } from './types';
+import React, { useState, useMemo, useRef, useEffect, useCallback, memo } from 'react';
+import { ANIME_LIST, CATEGORIES } from './constants';
+import { Anime } from './types';
 
-export const ALL_GENRES = [
-  'Action', 'Adventure', 'Fantasy', 'Sci-Fi', 'Drama', 'Psychological', 
-  'Comedy', 'Supernatural', 'Romance', 'Mystery', 'Seinen', 'Shonen', 
-  'Slice of Life', 'Sports', 'Thriller', 'Historical', 'Horror', 'Mecha'
-];
+/* =========================
+   THEMED SCROLLBAR + SEARCH CSS
+========================= */
+const ThemedStyles = () => (
+  <style>{`
+    /* ===== Scrollbars ===== */
+    .themed-scrollbar {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(234,179,8,0.55) rgba(234,179,8,0.10);
+    }
+    .themed-scrollbar::-webkit-scrollbar { width: 10px; height: 10px; }
+    .themed-scrollbar::-webkit-scrollbar-track {
+      background: rgba(234,179,8,0.10);
+      border-radius: 999px;
+    }
+    .themed-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(234,179,8,0.40);
+      border-radius: 999px;
+      border: 2px solid rgba(0,0,0,0.60);
+    }
+    .themed-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(234,179,8,0.62); }
 
-export const CATEGORIES: string[] = [
-  'All',
-  Category.MUST_WATCH,
-  Category.GOATS,
-  Category.PEAK,
-  Category.GOOD,
-  Category.NOTHING_ELSE,
-  Category.SPORTS,
-  Category.UNDERRATED,
-  Category.UNKNOWN
-];
+    .themed-scrollbar-sm {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(234,179,8,0.48) rgba(234,179,8,0.08);
+    }
+    .themed-scrollbar-sm::-webkit-scrollbar { width: 8px; height: 8px; }
+    .themed-scrollbar-sm::-webkit-scrollbar-track {
+      background: rgba(234,179,8,0.08);
+      border-radius: 999px;
+    }
+    .themed-scrollbar-sm::-webkit-scrollbar-thumb {
+      background: rgba(234,179,8,0.34);
+      border-radius: 999px;
+      border: 2px solid rgba(0,0,0,0.65);
+    }
+    .themed-scrollbar-sm::-webkit-scrollbar-thumb:hover { background: rgba(234,179,8,0.55); }
 
-export const ANIME_LIST: Anime[] = [
-  // MUST WATCH ANIME
-  {
-    id: 'mw-1',
-    title: 'Cyberpunk Edgerunners',
-    category: Category.MUST_WATCH,
-    genres: ['Action', 'Sci-Fi', 'Psychological'],
-    description: 'In a dystopia riddled with corruption and cybernetic implants, a talented but reckless street kid strives to become a mercenary outlaw.',
-    coverImageURL: 'https://resizing.flixster.com/-XZAfHZM39UwaGJIFWKAE8fS0ak=/v3/t/assets/p22812509_b_v13_ab.jpg',
-    releaseYear: 2022,
-    status: 'Ongoing',
-    trailerUrl: 'https://www.youtube.com/watch?v=JtqIas3bYhg'
-  },
-  {
-    id: 'mw-2',
-    title: 'Dragon Ball (Z, GT)',
-    category: Category.MUST_WATCH,
-    genres: ['Action', 'Adventure', 'Fantasy'],
-    description: 'The legendary adventures of Goku as he defends the Earth against powerful galactic threats and explores his heritage.',
-    coverImageURL: 'https://a.storyblok.com/f/178900/640x960/da03dda68a/cbdf29cd77e0512cbbdd77e77c5530061647360873_main.jpg/m/filters:quality(95)format(webp)',
-    releaseYear: 1989,
-    status: 'Finished',
-    trailerUrl: 'https://www.youtube.com/watch?v=hGInm97FwYc'
-  },
-  {
-    id: 'mw-3',
-    title: 'Bleach',
-    category: Category.MUST_WATCH,
-    genres: ['Action', 'Supernatural', 'Fantasy'],
-    description: 'Ichigo Kurosaki becomes a Soul Reaper to protect his town from restless spirits known as Hollows.',
-    coverImageURL: 'https://i.pinimg.com/736x/8b/3e/9c/8b3e9c7953d6cdc568b288bdf25b4f10.jpg',
-    releaseYear: 2004,
-    status: 'Ongoing',
-    trailerUrl: 'https://www.youtube.com/watch?v=e8_A7C20u_4'
-  },
-  {
-    id: 'mw-4',
-    title: 'JoJo’s Bizarre Adventure',
-    category: Category.MUST_WATCH,
-    genres: ['Action', 'Adventure', 'Supernatural'],
-    description: 'The intergenerational struggle of the Joestar family against supernatural forces and ancient enemies.',
-    coverImageURL: 'https://m.media-amazon.com/images/I/81c2xcL065L._AC_UF894,1000_QL80_.jpg',
-    releaseYear: 2012,
-    status: 'Ongoing',
-    trailerUrl: 'https://www.youtube.com/watch?v=TiG6Y20B6k0'
-  },
-  {
-    id: 'mw-5',
-    title: 'My Hero Academia',
-    category: Category.MUST_WATCH,
-    genres: ['Action', 'Comedy', 'Shonen'],
-    description: 'In a world of heroes, Izuku Midoriya pursues his dream of becoming the greatest hero despite starting without a quirk.',
-    coverImageURL: 'https://external-preview.redd.it/my-hero-academia-season-7-key-visual-v0-h_11UwfFpZN5y-E5dgFYdEbbat8p660xdmNHJpRHomg.jpg?width=640&crop=smart&auto=webp&s=a241f94cfe4f51b4f5a5d1718998422b73738674',
-    releaseYear: 2016,
-    status: 'Finished',
-    trailerUrl: 'https://www.youtube.com/watch?v=EPV_P3P-f60'
-  },
-  {
-    id: 'mw-6',
-    title: 'Black Clover',
-    category: Category.MUST_WATCH,
-    genres: ['Action', 'Fantasy', 'Comedy'],
-    description: 'Asta and Yuno, two orphans with contrasting magical abilities, compete to become the Wizard King.',
-    coverImageURL: 'https://m.media-amazon.com/images/I/81uEVxA2VPS._AC_UF894,1000_QL80_.jpg',
-    releaseYear: 2017,
-    status: 'Finished',
-    trailerUrl: 'https://www.youtube.com/watch?v=vUunPz5-vP4'
-  },
-  {
-    id: 'mw-7',
-    title: 'Hunter x Hunter',
-    category: Category.MUST_WATCH,
-    genres: ['Action', 'Adventure', 'Fantasy'],
-    description: 'Gon Freecss embarks on a journey to become a Hunter and find his mysterious father.',
-    coverImageURL: 'https://images-cdn.ubuy.co.in/694632b496cd3b62d6037729-poster-stop-online-hunter-x-hunter.jpg',
-    releaseYear: 2011,
-    status: 'Finished',
-    trailerUrl: 'https://www.youtube.com/watch?v=d6kBeJjTGnY'
-  },
-  {
-    id: 'mw-8',
-    title: 'Vinland Saga',
-    category: Category.MUST_WATCH,
-    genres: ['Action', 'Adventure', 'Historical'],
-    description: 'A Viking epic centered on revenge, war, and the search for a land without conflict.',
-    coverImageURL: 'https://cdn.discordapp.com/attachments/1426600904278282282/1469016599888396470/IMG_4097.jpg?ex=69861fd2&is=6984ce52&hm=c7505140bcac6e6977fcb6314ab11c72241a927117b8f0721348d8701a734c89&',
-    releaseYear: 2019,
-    status: 'Ongoing',
-    trailerUrl: 'https://www.youtube.com/watch?v=f8Tf89A96U0'
-  },
-  {
-    id: 'mw-9',
-    title: 'InuYasha',
-    category: Category.MUST_WATCH,
-    genres: ['Adventure', 'Fantasy', 'Romance'],
-    description: 'Kagome is pulled into feudal Japan where she joins forces with half-demon Inuyasha to find the Shikon Jewel shards.',
-    coverImageURL: 'https://m.media-amazon.com/images/M/MV5BYWQ0M2I5YjgtYWVjNC00ZmE1LWEyMjUtY2U4MmJjNjk2Njk3XkEyXkFqcGc@._V1_.jpg',
-    releaseYear: 2000,
-    status: 'Finished'
-  },
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-  // GOATS OF ANIME
-  {
-    id: 'goat-1',
-    title: 'Dragon Ball Super',
-    category: Category.GOATS,
-    genres: ['Action', 'Adventure', 'Fantasy'],
-    description: 'The saga continues as Goku reaches new heights of power to face gods and multiversal tournaments.',
-    coverImageURL: 'https://m.media-amazon.com/images/I/919bXnjsZgL._UF1000,1000_QL80_.jpg',
-    releaseYear: 2015,
-    status: 'Finished',
-    trailerUrl: 'https://www.youtube.com/watch?v=tIit6mD6-fI'
-  },
-  {
-    id: 'goat-2',
-    title: 'Demon Slayer',
-    category: Category.GOATS,
-    genres: ['Action', 'Supernatural', 'Historical'],
-    description: 'Tanjiro Kamado sets out to cure his sister and avenge his family after a devastating demon attack.',
-    coverImageURL: 'https://preview.redd.it/demon-slayer-kimetsu-no-yaiba-infinity-castle-arc-part-1-v0-l7fjxyu912me1.jpeg?width=640&crop=smart&auto=webp&s=579f508dd3449ee311347b2f0fe832c2f85b82be',
-    releaseYear: 2019,
-    status: 'Ongoing',
-    trailerUrl: 'https://www.youtube.com/watch?v=VQGCKyvzIM4'
-  },
-  {
-    id: 'goat-3',
-    title: 'Solo Leveling',
-    category: Category.GOATS,
-    genres: ['Action', 'Fantasy', 'Adventure'],
-    description: 'The weakest hunter in the world gains the ability to level up infinitely in a modern world plagued by dungeons.',
-    coverImageURL: 'https://cdn.myanimelist.net/images/anime/1801/142390.jpg',
-    releaseYear: 2024,
-    status: 'Ongoing',
-    trailerUrl: 'https://www.youtube.com/watch?v=V6P6v689Poc'
-  },
-  {
-    id: 'goat-4',
-    title: 'Jujutsu Kaisen',
-    category: Category.GOATS,
-    genres: ['Action', 'Supernatural', 'Drama'],
-    description: 'Yuji Itadori enters the dangerous world of Sorcerers after consuming a powerful cursed artifact.',
-    coverImageURL: 'https://i.pinimg.com/originals/23/4c/72/234c72a6fdb8a993cd9f68deaf9bd661.jpg',
-    releaseYear: 2020,
-    status: 'Ongoing',
-    trailerUrl: 'https://www.youtube.com/watch?v=pkKu7TV_OAU'
-  },
-  {
-    id: 'goat-5',
-    title: 'Gachiakuta',
-    category: Category.GOATS,
-    genres: ['Action', 'Fantasy', 'Drama'],
-    description: 'After being cast into the abyss of trash, Rudo must fight for survival in a vibrant and dangerous wasteland.',
-    coverImageURL: 'https://cdn.myanimelist.net/images/anime/1682/150432.jpg',
-    releaseYear: 2025,
-    status: 'Ongoing'
-  },
-  {
-    id: 'good-9',
-    title: 'Charlotte',
-    category: Category.GOOD,
-    genres: ['Supernatural', 'Drama', 'School'],
-    description: 'Teenagers with imperfect superpowers navigate the challenges of their abilities and hidden conspiracies.',
-    coverImageURL: 'https://i.pinimg.com/564x/0b/6f/0c/0b6f0c0d98b1e3c6db79dd50675c94ca.jpg',
-    releaseYear: 2015,
-    status: 'Finished'
-  },
-  {
-    id: 'goat-7',
-    title: 'Death Note',
-    category: Category.GOATS,
-    genres: ['Psychological', 'Thriller', 'Supernatural'],
-    description: 'A high school prodigy attempts to rid the world of criminals using a supernatural notebook that can kill.',
-    coverImageURL: 'https://m.media-amazon.com/images/I/71GqUgwo-eL._AC_UF894,1000_QL80_.jpg',
-    releaseYear: 2006,
-    status: 'Finished',
-    trailerUrl: 'https://www.youtube.com/watch?v=NlJZ-YgAt-c'
-  },
+    .scroll-snap-align-center { scroll-snap-align: center; }
+    .kinetic-rail { scroll-snap-type: x mandatory; scroll-behavior: smooth; }
 
-  // PEAK OF ANIME
-  {
-    id: 'peak-1',
-    title: 'Dr. Stone',
-    category: Category.PEAK,
-    genres: ['Sci-Fi', 'Adventure', 'Comedy'],
-    description: 'Thousands of years after humanity is petrified, Senku Ishigami uses science to rebuild civilization from scratch.',
-    coverImageURL: 'https://cdn.myanimelist.net/images/anime/1613/102576.jpg',
-    releaseYear: 2019,
-    status: 'Ongoing',
-    trailerUrl: 'https://www.youtube.com/watch?v=7v_pS6G_q2Y'
-  },
-  {
-    id: 'peak-2',
-    title: 'The Apothecary Diaries',
-    category: Category.PEAK,
-    genres: ['Mystery', 'Historical', 'Drama'],
-    description: 'A young apothecary solves medical mysteries within the imperial palace using her wit and knowledge of poisons.',
-    coverImageURL: 'https://m.media-amazon.com/images/M/MV5BOGU5MGI2MzEtMWU2Ni00ZWY2LWI5Y2UtMzI5N2Q2YTYxNTFkXkEyXkFqcGc@._V1_.jpg',
-    releaseYear: 2023,
-    status: 'Ongoing',
-    trailerUrl: 'https://www.youtube.com/watch?v=0kH85mX-TIE'
-  },
-  {
-    id: 'peak-3',
-    title: 'Re:ZERO',
-    category: Category.PEAK,
-    genres: ['Drama', 'Fantasy', 'Psychological'],
-    description: 'Subaru Natsuki is transported to a fantasy world where he discovers he has the power to return from death.',
-    coverImageURL: 'https://i.redd.it/v3vakalzmtpa1.jpg',
-    releaseYear: 2016,
-    status: 'Ongoing',
-    trailerUrl: 'https://www.youtube.com/watch?v=vFfXjuVA1Jk'
-  },
-  {
-    id: 'peak-4',
-    title: 'Frieren: Beyond Journey’s End',
-    category: Category.PEAK,
-    genres: ['Adventure', 'Fantasy', 'Drama'],
-    description: 'An immortal elf reflects on the passage of time and the lives of her human companions after their great quest.',
-    coverImageURL: 'https://cdn.myanimelist.net/images/anime/1921/154528.jpg',
-    releaseYear: 2023,
-    status: 'Ongoing',
-    trailerUrl: 'https://www.youtube.com/watch?v=q6D_76z24jM'
-  },
-  {
-    id: 'peak-5',
-    title: 'Hell’s Paradise',
-    category: Category.PEAK,
-    genres: ['Action', 'Adventure', 'Supernatural'],
-    description: 'Convicts are sent to a mysterious island to find the elixir of life in exchange for a full pardon.',
-    coverImageURL: 'https://m.media-amazon.com/images/I/81keV50g-yL._AC_UF1000,1000_QL80_.jpg',
-    releaseYear: 2023,
-    status: 'Ongoing',
-    trailerUrl: 'https://www.youtube.com/watch?v=X2m_I8656vI'
-  },
-  {
-    id: 'peak-6',
-    title: 'Lord of Mysteries',
-    category: Category.PEAK,
-    genres: ['Mystery', 'Supernatural', 'Fantasy'],
-    description: 'In a Victorian-inspired world of beyonders and secret organizations, Klein Moretti unravels cosmic secrets.',
-    coverImageURL: 'https://i.pinimg.com/736x/e8/dd/65/e8dd65c55ad976cc159c56b9b15a62b3.jpg',
-    releaseYear: 2025,
-    status: 'Ongoing'
-  },
-  {
-    id: 'peak-7',
-    title: 'Darling in the Franxx',
-    category: Category.PEAK,
-    genres: ['Sci-Fi', 'Mecha', 'Romance'],
-    description: 'In a post-apocalyptic future, young pilots must synchronize to control giant robots and defend humanity.',
-    coverImageURL: 'https://m.media-amazon.com/images/M/MV5BYWNlYzk1NGQtNTZkNi00YzJiLWJkMWUtZTYzNjI3YTc5ZDRhXkEyXkFqcGc@._V1_.jpg',
-    releaseYear: 2018,
-    status: 'Finished',
-    trailerUrl: 'https://www.youtube.com/watch?v=2N9p5NfB514'
-  },
-  {
-    id: 'peak-8',
-    title: 'Classroom of the Elite',
-    category: Category.PEAK,
-    genres: ['Drama', 'Psychological', 'School'],
-    description: 'Students in a prestigious, high-stakes school engage in mental warfare to climb the ranks of their hierarchy.',
-    coverImageURL: 'https://m.media-amazon.com/images/M/MV5BY2U2NWU5MzMtOGY5Ni00MGI5LWFkZDYtMGNlN2RhMGRhNGZkXkEyXkFqcGc@._V1_.jpg',
-    releaseYear: 2017,
-    status: 'Ongoing',
-    trailerUrl: 'https://www.youtube.com/watch?v=kY6T-7pT3Ww'
-  },
-  {
-    id: 'peak-9',
-    title: 'Shangri-La Frontier',
-    category: Category.PEAK,
-    genres: ['Action', 'Adventure', 'Comedy'],
-    description: 'A "trash-tier" game expert takes on a legendary god-tier VRMMO and shakes its foundation with his skills.',
-    coverImageURL: 'https://external-preview.redd.it/shangri-la-frontier-season-2-new-visual-v0-lxDvU10hyDv15oNseLR_oa2ZtDwlpVyS3vmQ8ufbg2c.jpg?auto=webp&s=804651a372248468334f40a58af563768fd68b26',
-    releaseYear: 2023,
-    status: 'Ongoing',
-    trailerUrl: 'https://www.youtube.com/watch?v=H7uS0i0X88Y'
-  },
+    /* ===== Themed Search ===== */
+    .search-shell {
+      position: relative;
+      border-radius: 18px;
+      padding: 1px;
+      background: radial-gradient(120% 120% at 20% 0%, rgba(234,179,8,0.35), transparent 55%),
+                  linear-gradient(90deg, rgba(234,179,8,0.30), rgba(234,179,8,0.06), rgba(234,179,8,0.30));
+      box-shadow: 0 18px 60px rgba(0,0,0,0.45);
+    }
+    .search-inner {
+      border-radius: 17px;
+      background: linear-gradient(180deg, rgba(0,0,0,0.40), rgba(0,0,0,0.20));
+      border: 1px solid rgba(255,255,255,0.06);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    .search-input {
+      width: 100%;
+      outline: none;
+      background: transparent;
+      color: rgba(255,255,255,0.88);
+    }
+    .search-input::placeholder {
+      color: rgba(234,179,8,0.28);
+      letter-spacing: 0.10em;
+    }
+    .search-shell:focus-within {
+      background: radial-gradient(120% 120% at 20% 0%, rgba(234,179,8,0.50), transparent 55%),
+                  linear-gradient(90deg, rgba(234,179,8,0.55), rgba(234,179,8,0.10), rgba(234,179,8,0.55));
+      box-shadow: 0 22px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(234,179,8,0.20), 0 0 40px rgba(234,179,8,0.18);
+    }
+    .search-shell:focus-within .search-inner {
+      border-color: rgba(234,179,8,0.22);
+    }
+    .search-kbd {
+      border: 1px solid rgba(234,179,8,0.18);
+      background: rgba(234,179,8,0.08);
+      color: rgba(234,179,8,0.75);
+    }
+  `}</style>
+);
 
-  // GOOD ANIME
-  {
-    id: 'good-1',
-    title: 'Zom 100: Bucket List of the Dead',
-    category: Category.GOOD,
-    genres: ['Action', 'Comedy', 'Supernatural'],
-    description: 'A burnt-out employee finds new life during a zombie apocalypse and decides to live his life to the fullest.',
-    coverImageURL: 'https://cdn.myanimelist.net/images/anime/1384/136408.jpg',
-    releaseYear: 2023,
-    status: 'Finished',
-    trailerUrl: 'https://www.youtube.com/watch?v=7hXz60Tz-0U'
-  },
-  {
-    id: 'good-2',
-    title: 'My Happy Marriage',
-    category: Category.GOOD,
-    genres: ['Romance', 'Fantasy', 'Historical'],
-    description: 'An unloved daughter finds hope and healing in an arranged marriage to a supposedly cold military officer.',
-    coverImageURL: 'https://m.media-amazon.com/images/M/MV5BYzFkNDE4MmYtYTI4ZS00NTM1LWJlMTEtNWE2ZGNiZTE5YTVjXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg',
-    releaseYear: 2023,
-    status: 'Ongoing',
-    trailerUrl: 'https://www.youtube.com/watch?v=3W1_1T9vYwU'
-  },
-  {
-    id: 'good-3',
-    title: 'The Devil Is a Part-Timer!',
-    category: Category.GOOD,
-    genres: ['Comedy', 'Fantasy', 'Supernatural'],
-    description: 'The Demon King is transported to modern Tokyo and forced to work at a fast-food restaurant to survive.',
-    coverImageURL: 'https://m.media-amazon.com/images/M/MV5BODdjMWIyYjQtNzI4ZC00ZjA1LWJmYzMtYTA1ZjFiNTMxZWI5XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg',
-    releaseYear: 2013,
-    status: 'Finished'
-  },
-  {
-    id: 'good-4',
-    title: 'Mob Psycho 100',
-    category: Category.GOOD,
-    genres: ['Action', 'Comedy', 'Supernatural'],
-    description: 'A powerful esper boy tries to live a normal life while suppressing his explosive psychic emotions.',
-    coverImageURL: 'https://a.storyblok.com/f/178900/640x910/100590e9ce/4b84b65fecda379fedb477bf368150f21521377449_full.jpg/m/640x910',
-    releaseYear: 2016,
-    status: 'Finished',
-    trailerUrl: 'https://www.youtube.com/watch?v=nTese7u09V8'
-  },
-  {
-    id: 'good-5',
-    title: 'Golden Time',
-    category: Category.GOOD,
-    genres: ['Romance', 'Drama', 'Comedy'],
-    description: 'A college student with amnesia navigates new relationships and the shadows of his past self.',
-    coverImageURL: 'https://preview.redd.it/golden-time-v0-jud6v5ze8i8g1.jpeg?auto=webp&s=e89df0084092489a05886a8d56192e7417061634',
-    releaseYear: 2013,
-    status: 'Finished'
-  },
-  {
-    id: 'good-6',
-    title: 'Undead Unluck',
-    category: Category.GOOD,
-    genres: ['Action', 'Comedy', 'Supernatural'],
-    description: 'A girl with bad luck and a man who cannot die team up to challenge the rules of the universe.',
-    coverImageURL: 'https://m.media-amazon.com/images/M/MV5BNzFkODQxNDItMTZiMC00NjhkLWFkNjEtZDQ4MGQ0MmNhZmUzXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg',
-    releaseYear: 2023,
-    status: 'Finished',
-    trailerUrl: 'https://www.youtube.com/watch?v=FstYh1fX1b4'
-  },
-  {
-    id: 'good-7',
-    title: 'Mushoku Tensei',
-    category: Category.GOOD,
-    genres: ['Adventure', 'Fantasy', 'Drama'],
-    description: 'A failed man is reincarnated into a magical world and vows to live his life without regrets.',
-    coverImageURL: 'https://comicbook.com/wp-content/uploads/sites/4/2024/05/c94a9598-0003-4b4a-a80c-4716c19d3d46.jpg?w=1024',
-    releaseYear: 2021,
-    status: 'Ongoing',
-    trailerUrl: 'https://www.youtube.com/watch?v=680XjU5jX_Q'
-  },
-  {
-    id: 'good-8',
-    title: 'Goblin Slayer',
-    category: Category.GOOD,
-    genres: ['Action', 'Fantasy', 'Adventure'],
-    description: 'A grim warrior dedicates his life to exterminating every goblin in existence with ruthless efficiency.',
-    coverImageURL: 'https://m.media-amazon.com/images/M/MV5BMTk1MGM5ZDQtMWFkZS00YTUyLWIzYWYtZTQwYWYzNzQ3MTMyXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg',
-    releaseYear: 2018,
-    status: 'Ongoing',
-    trailerUrl: 'https://www.youtube.com/watch?v=FstYh1fX1b4'
-  },
-  {
-    id: 'good-9',
-    title: 'Sentenced to Be a Hero',
-    category: Category.GOOD,
-    genres: ['Action', 'Fantasy', 'Drama'],
-    description: 'A former criminal is forced into the role of a hero as a punishment for his past deeds.',
-    coverImageURL: 'https://a.storyblok.com/f/178900/849x1200/4268ea28b9/sentenced-to-be-a-hero-visual.jpeg/m/filters:quality(95)format(webp)',
-    releaseYear: 2025,
-    status: 'Ongoing'
-  },
+/* =========================
+   CURSOR (modern + smooth)
+========================= */
+const Cursor = () => {
+  const cursorRef = useRef<HTMLDivElement>(null);
+  const visibleOnce = useRef(false);
 
-  // ANIME TO WATCH WHEN THERE’S NOTHING ELSE
-  {
-    id: 'ne-1',
-    title: 'Wind Breaker',
-    category: Category.NOTHING_ELSE,
-    genres: ['Action', 'Drama', 'School'],
-    description: 'A delinquent student joins a neighborhood defense group and learns the value of protecting others.',
-    coverImageURL: 'https://m.media-amazon.com/images/M/MV5BNTQzNDI5OGItZDZkMy00MWQ1LWIwM2YtYzc2YWNhOGJlZWQxXkEyXkFqcGc@._V1_.jpg',
-    releaseYear: 2024,
-    status: 'Ongoing',
-    trailerUrl: 'https://www.youtube.com/watch?v=FstYh1fX1b4'
-  },
-  {
-    id: 'ne-2',
-    title: 'Kaiju No. 8',
-    category: Category.NOTHING_ELSE,
-    genres: ['Action', 'Sci-Fi', 'Horror'],
-    description: 'A man working in kaiju cleanup gains the power to transform into a monster himself.',
-    coverImageURL: 'https://a.storyblok.com/f/178900/750x1060/21be9c9b68/kaiju_no_8_exhibition_key_visual.jpg/m/filters:quality(95)format(webp)',
-    releaseYear: 2024,
-    status: 'Ongoing',
-    trailerUrl: 'https://www.youtube.com/watch?v=7nS_a2L9W_Y'
-  },
-  {
-    id: 'ne-3',
-    title: 'To Be Hero X',
-    category: Category.NOTHING_ELSE,
-    genres: ['Action', 'Comedy', 'Sci-Fi'],
-    description: 'A world where heroes are ranked by their strength and public image faces a new, mysterious threat.',
-    coverImageURL: 'https://m.media-amazon.com/images/M/MV5BOTM3ZTgyZDUtM2FhNi00N2E1LWJlYzEtZGVhNDc3ZDEwODM2XkEyXkFqcGc@._V1_.jpg',
-    releaseYear: 2025,
-    status: 'Ongoing'
-  },
-  {
-    id: 'ne-4',
-    title: 'Danganronpa',
-    category: Category.NOTHING_ELSE,
-    genres: ['Mystery', 'Horror', 'Psychological'],
-    description: 'Students at a prestigious academy are forced into a deadly killing game by a sadistic bear.',
-    coverImageURL: 'https://m.media-amazon.com/images/I/810bte0sz0L.jpg',
-    releaseYear: 2013,
-    status: 'Finished',
-    trailerUrl: 'https://www.youtube.com/watch?v=f-B6yXWp4qU'
-  },
-  {
-    id: 'ne-5',
-    title: 'More Than a Married Couple, But Not Lovers',
-    category: Category.NOTHING_ELSE,
-    genres: ['Romance', 'Comedy', 'School'],
-    description: 'High school students are paired up for a mandatory marriage training program.',
-    coverImageURL: 'https://a.storyblok.com/f/178900/720x1019/92a2df354f/f8bb861fa9fb82fb3d5f8887c36668231651454540_main.jpg/m/filters:quality(95)format(webp)',
-    releaseYear: 2022,
-    status: 'Finished'
-  },
-  {
-    id: 'ne-6',
-    title: 'Shikimori’s Not Just a Cutie',
-    category: Category.NOTHING_ELSE,
-    genres: ['Romance', 'Comedy', 'Slice of Life'],
-    description: 'The cool and protective side of Shikimori comes out whenever her unlucky boyfriend is in trouble.',
-    coverImageURL: 'https://m.media-amazon.com/images/I/81DSFQq38lL._AC_UF1000,1000_QL80_.jpg',
-    releaseYear: 2022,
-    status: 'Finished'
-  },
-  {
-    id: 'ne-7',
-    title: 'Mashle: Magic and Muscles',
-    category: Category.NOTHING_ELSE,
-    genres: ['Action', 'Comedy', 'Fantasy'],
-    description: 'In a world of magic, a boy without a lick of it must use his raw physical strength to succeed at a magic academy.',
-    coverImageURL: 'https://image.tmdb.org/t/p/original/yORTvQOQTZzZ9JRIpRH4QaIaQBm.jpg',
-    releaseYear: 2023,
-    status: 'Finished',
-    trailerUrl: 'https://www.youtube.com/watch?v=FstYh1fX1b4'
-  },
-  {
-    id: 'ne-8',
-    title: 'Dead Mount Death Play',
-    category: Category.NOTHING_ELSE,
-    genres: ['Action', 'Fantasy', 'Supernatural'],
-    description: 'A powerful necromancer from another world is reincarnated as a child in modern Shinjuku.',
-    coverImageURL: 'https://m.media-amazon.com/images/M/MV5BNGYzNDFmMjgtZjFlMi00Yzg5LTkxMmEtOGY0N2FjNGNjZjA1XkEyXkFqcGc@._V1_.jpg',
-    releaseYear: 2023,
-    status: 'Finished'
-  },
-  {
-    id: 'ne-9',
-    title: 'Unnamed Memory',
-    category: Category.NOTHING_ELSE,
-    genres: ['Fantasy', 'Romance', 'Adventure'],
-    description: 'A cursed prince seeks out a powerful witch to break his spell, starting a journey of discovery and destiny.',
-    coverImageURL: 'https://m.media-amazon.com/images/M/MV5BY2Q5NTRiYTgtZjJmOS00YjQ0LWE2MmQtMjE5MmM3ODQ5ZDg2XkEyXkFqcGc@._V1_.jpg',
-    releaseYear: 2024,
-    status: 'Ongoing'
-  },
+  useEffect(() => {
+    const isTouchDevice =
+      'ontouchstart' in window ||
+      (navigator?.maxTouchPoints ?? 0) > 0 ||
+      window.matchMedia?.('(pointer: coarse)')?.matches;
 
-  // SPORTS ANIME
-  {
-    id: 'sp-1',
-    title: 'Kuroko no Basket',
-    category: Category.SPORTS,
-    genres: ['Sports', 'Action', 'Comedy'],
-    description: 'A basketball team attempts to reach the top of the high school leagues by defeating the legendary "Generation of Miracles."',
-    coverImageURL: 'https://images-cdn.ubuy.co.in/635229bf8675fc7d07430182-kuroko-no-basket-tetsuya-kuroko-kagami.jpg',
-    releaseYear: 2012,
-    status: 'Finished',
-    trailerUrl: 'https://www.youtube.com/watch?v=TiG6Y20B6k0'
-  },
-  {
-    id: 'sp-2',
-    title: 'Haikyuu!!',
-    category: Category.SPORTS,
-    genres: ['Sports', 'Drama', 'Comedy'],
-    description: 'A high school volleyball team fights for their place in the national tournament with heart and determination.',
-    coverImageURL: 'https://m.media-amazon.com/images/I/71ugKSErpsS._AC_UF894,1000_QL80_.jpg',
-    releaseYear: 2014,
-    status: 'Finished',
-    trailerUrl: 'https://www.youtube.com/watch?v=J_pnu8v9Lyo'
-  },
-  {
-    id: 'sp-3',
-    title: 'Hajime no Ippo',
-    category: Category.SPORTS,
-    genres: ['Sports', 'Action', 'Drama'],
-    description: 'A bullied boy discovers his hidden talent for boxing and works his way up the professional rankings.',
-    coverImageURL: 'https://m.media-amazon.com/images/M/MV5BN2UzMmM5NTQtYjUxYy00OWVjLTkwOWMtYzFhOGQxN2VlZjI5XkEyXkFqcGc@._V1_.jpg',
-    releaseYear: 2000,
-    status: 'Finished',
-    trailerUrl: 'https://www.youtube.com/watch?v=TiG6Y20B6k0'
-  },
+    if (isTouchDevice) return;
 
-  // UNDERRATED ANIME
-  {
-    id: 'ur-1',
-    title: 'Seraph of the End',
-    category: Category.UNDERRATED,
-    genres: ['Action', 'Drama', 'Supernatural'],
-    description: 'Humanity struggles to survive in a world ruled by vampires after a mysterious apocalyptic virus.',
-    coverImageURL: 'https://m.media-amazon.com/images/M/MV5BNTllMDkyNGEtNzIzMi00ZmUyLTlhNjUtYzRmN2NhYzZmOTBmXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg',
-    releaseYear: 2015,
-    status: 'Finished'
-  },
-  {
-    id: 'ur-2',
-    title: 'Great Pretender',
-    category: Category.UNDERRATED,
-    genres: ['Action', 'Adventure', 'Mystery'],
-    description: 'A small-time con artist gets swept up in a global operation of high-stakes deception and elaborate schemes.',
-    coverImageURL: 'https://cdn.myanimelist.net/images/anime/1418/107954.jpg',
-    releaseYear: 2020,
-    status: 'Finished'
-  },
+    document.body.style.cursor = 'none';
 
-  // MORE UNKNOWN ANIME
-  {
-    id: 'uk-1',
-    title: 'Talentless Nana',
-    category: Category.UNKNOWN,
-    genres: ['Psychological', 'Thriller', 'Supernatural'],
-    description: 'On a secret island school for gifted children, a student without powers begins a deadly game of elimination.',
-    coverImageURL: 'https://m.media-amazon.com/images/M/MV5BYmUwNTUyYWMtY2U2Yy00Y2Y1LWFmZmMtZTNlNmU3NmY3N2FhXkEyXkFqcGc@._V1_.jpg',
-    releaseYear: 2020,
-    status: 'Finished'
-  },
-  {
-    id: 'uk-2',
-    title: 'Elfen Lied',
-    category: Category.UNKNOWN,
-    genres: ['Action', 'Drama', 'Horror'],
-    description: 'A mutant girl with invisible arms escapes a research facility, leaving a trail of destruction in her wake.',
-    coverImageURL: 'https://resizing.flixster.com/jnM2V6pg3Tq1wtlj_oXtTi5KFvA=/fit-in/705x460/v2/https://resizing.flixster.com/-XZAfHZM39UwaGJIFWKAE8fS0ak=/v3/t/assets/p231009_b_v8_aa.jpg',
-    releaseYear: 2004,
-    status: 'Finished'
-  },
-  {
-    id: 'uk-3',
-    title: 'UQ Holder',
-    category: Category.UNKNOWN,
-    genres: ['Action', 'Fantasy', 'Sci-Fi'],
-    description: 'A young immortal joins an organization of fellow immortals to explore their magical world.',
-    coverImageURL: 'https://m.media-amazon.com/images/I/61U1BgN4hmL.jpg',
-    releaseYear: 2017,
-    status: 'Finished'
-  },
-  {
-    id: 'uk-4',
-    title: 'Air Gear',
-    category: Category.UNKNOWN,
-    genres: ['Action', 'Sports', 'Comedy'],
-    description: 'Street gangs compete for territory using high-tech motorized rollerblades known as Air Treks.',
-    coverImageURL: 'https://m.media-amazon.com/images/M/MV5BMjg4NDc4NjctOTg0ZC00NDU0LWE3ZmQtNTQ2NWQ2MzMyYjZmXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg',
-    releaseYear: 2006,
-    status: 'Finished'
-  },
-  {
-    id: 'uk-5',
-    title: 'Darwin’s Game',
-    category: Category.UNKNOWN,
-    genres: ['Action', 'Sci-Fi', 'Mystery'],
-    description: 'A high school student gets trapped in a deadly real-life mobile game survival contest.',
-    coverImageURL: 'https://m.media-amazon.com/images/M/MV5BNDRmMGI4NjYtYjFkYi00NTBlLWI0YmEtMThmMjU2ZDI2MWNkXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg',
-    releaseYear: 2020,
-    status: 'Finished'
-  },
-  {
-    id: 'uk-6',
-    title: 'Edens Zero',
-    category: Category.UNKNOWN,
-    genres: ['Action', 'Sci-Fi', 'Adventure'],
-    description: 'A boy raised by robots embarks on a space-faring quest to find the fabled cosmic goddess, Mother.',
-    coverImageURL: 'https://m.media-amazon.com/images/M/MV5BMjhlYWVlN2ItZDg3Yy00NGYxLWJkODYtMjFjZTE1YzVlYjdjXkEyXkFqcGc@._V1_.jpg',
-    releaseYear: 2021,
-    status: 'Finished'
-  },
-  {
-    id: 'uk-7',
-    title: 'The Kingdom of Ruin',
-    category: Category.UNKNOWN,
-    genres: ['Action', 'Fantasy', 'Drama'],
-    description: 'A survivor of a witch hunt seeks bloody revenge against the advanced scientific empire that killed his master.',
-    coverImageURL: 'https://m.media-amazon.com/images/M/MV5BY2M4MjE2ZmEtM2M2MC00NjU2LWI0Y2EtNzRkNGVkNmM5MDBjXkEyXkFqcGc@._V1_.jpg',
-    releaseYear: 2023,
-    status: 'Finished'
-  },
-  {
-    id: 'uk-8',
-    title: 'Gods’ Games We Play',
-    category: Category.UNKNOWN,
-    genres: ['Sci-Fi', 'Fantasy', 'Strategy'],
-    description: 'Bored gods challenge humans to a series of ultimate games with the fate of their world on the line.',
-    coverImageURL: 'https://m.media-amazon.com/images/M/MV5BNjc4NGQxY2ItZTE2NC00M2U4LTk4OTUtZTcxNjVlMDVjZDk0XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg',
-    releaseYear: 2024,
-    status: 'Ongoing'
-  },
-  {
-    id: 'uk-9',
-    title: 'The Ossan Newbie Adventurer, Trained to Death by the Most Powerful Party, Became Invincible',
-    category: Category.UNKNOWN,
-    genres: ['Action', 'Adventure', 'Fantasy'],
-    description: 'A 30-year-old adventurer with late-blooming talent uses his brutal training to shock the world.',
-    coverImageURL: 'https://m.media-amazon.com/images/M/MV5BMzczOTc3NTctMGUyOS00ZDgxLTlkMWItNTRhNWY3NzcxNmJkXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg',
-    releaseYear: 2024,
-    status: 'Ongoing'
-  },
-  {
-    id: 'uk-10',
-    title: 'Serial Experiments Lain',
-    category: Category.UNKNOWN,
-    genres: ['Psychological', 'Sci-Fi', 'Mystery'],
-    description: 'A girl becomes increasingly connected to a vast network, questioning the boundaries between reality and digital life.',
-    coverImageURL: 'https://m.media-amazon.com/images/M/MV5BZGJiMmEyMDMtMTJlZi00YTgwLWI1ODgtZDA1YjEyM2Q5MjI3XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg',
-    releaseYear: 1998,
-    status: 'Finished'
-  },
-  {
-    id: 'uk-11',
-    title: 'Sword of the Demon Hunter: Kijin Gentōshō',
-    category: Category.UNKNOWN,
-    genres: ['Action', 'Fantasy', 'Historical'],
-    description: 'An intergenerational story of a warrior hunting demons across different eras of Japanese history.',
-    coverImageURL: 'https://upload.wikimedia.org/wikipedia/en/1/1c/Kijin_Gent%C5%8Dsh%C5%8D_novel_volume_1_cover.jpg',
-    releaseYear: 2024,
-    status: 'Ongoing'
-  },
-  {
-    id: 'uk-12',
-    title: 'Terror in Tokyo',
-    category: Category.UNKNOWN,
-    genres: ['Thriller', 'Psychological', 'Mystery'],
-    description: 'Two mysterious teenagers conduct a series of tactical bombings in Tokyo to deliver a cryptic message to the world.',
-    coverImageURL: 'https://m.media-amazon.com/images/I/61PUDYpfFlL.jpg',
-    releaseYear: 2014,
-    status: 'Finished'
+    const moveCursor = (e: MouseEvent) => {
+      const el = cursorRef.current;
+      if (!el) return;
+
+      if (!visibleOnce.current) {
+        visibleOnce.current = true;
+        el.style.opacity = '1';
+      }
+
+      el.style.left = `${e.clientX}px`;
+      el.style.top = `${e.clientY}px`;
+    };
+
+    window.addEventListener('mousemove', moveCursor, { passive: true });
+    return () => {
+      window.removeEventListener('mousemove', moveCursor);
+      document.body.style.cursor = 'default';
+    };
+  }, []);
+
+  return (
+    <div
+      ref={cursorRef}
+      className="fixed pointer-events-none z-[9999]"
+      style={{
+        left: 0,
+        top: 0,
+        transform: 'translate(-50%, -50%)',
+        opacity: 0,
+        transition: 'opacity 180ms ease',
+        willChange: 'left, top',
+      }}
+    >
+      <div className="w-8 h-8 rounded-full border border-yellow-500/35 bg-yellow-500/10 backdrop-blur-md shadow-[0_0_24px_rgba(234,179,8,0.18)] flex items-center justify-center">
+        <div className="w-2 h-2 rounded-full bg-yellow-400 shadow-[0_0_12px_rgba(255,215,0,0.85)]" />
+      </div>
+    </div>
+  );
+};
+
+const AnimeCard = memo(
+  ({
+    anime,
+    isHovered,
+    onClick,
+    cardRef,
+  }: {
+    anime: Anime;
+    isHovered: boolean;
+    onClick: () => void;
+    cardRef: React.Ref<HTMLDivElement>;
+  }) => {
+    return (
+      <div
+        ref={cardRef}
+        onClick={onClick}
+        className={`
+          kinetic-card relative h-[50vh] md:h-[46vh] flex-shrink-0 cursor-none overflow-hidden
+          border border-yellow-500/10 transition-all duration-700
+          rounded-3xl
+          ${isHovered
+            ? 'w-[86vw] md:w-[440px] mx-1.5 md:mx-3 z-20 shadow-[0_0_60px_rgba(0,0,0,0.85)] brightness-100 grayscale-0'
+            : 'w-[128px] md:w-[160px] mx-1 grayscale brightness-[0.42] hover:brightness-[0.65]'}
+        `}
+      >
+        <div className="absolute inset-0 pointer-events-none">
+          <img
+            src={anime.coverImageURL}
+            alt={anime.title}
+            loading="lazy"
+            decoding="async"
+            draggable={false}
+            className={`w-full h-full object-cover object-top transition-transform duration-[1200ms] ${
+              isHovered ? 'scale-[1.07]' : 'scale-100'
+            }`}
+          />
+          <div
+            className={`absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent transition-opacity duration-500 ${
+              isHovered ? 'opacity-95' : 'opacity-75'
+            }`}
+          />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(234,179,8,0.18),transparent_55%)] opacity-70" />
+        </div>
+
+        <div
+          className={`absolute inset-0 rounded-3xl ring-1 ring-yellow-500/10 transition-all duration-500 ${
+            isHovered ? 'ring-yellow-500/25' : ''
+          }`}
+        />
+
+        <div
+          className={`absolute bottom-0 left-0 w-full px-5 pb-5 pt-10 transition-all duration-300 pointer-events-none ${
+            isHovered ? 'opacity-0 translate-y-6' : 'opacity-100 translate-y-0'
+          }`}
+        >
+          <h3 className="text-xs md:text-sm font-extrabold tracking-wide text-yellow-500/55 line-clamp-2">
+            {anime.title}
+          </h3>
+        </div>
+
+        <div
+          className={`absolute inset-0 flex flex-col justify-end p-6 md:p-7 transition-all duration-500 pointer-events-none ${
+            isHovered ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+          }`}
+        >
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-2">
+              {anime.genres.slice(0, 2).map((g) => (
+                <span
+                  key={g}
+                  className="text-[10px] md:text-[11px] px-2.5 py-1 rounded-full border border-yellow-500/18 bg-black/35 text-yellow-100/90 font-semibold tracking-wide"
+                >
+                  {g}
+                </span>
+              ))}
+            </div>
+
+            <h2 className="text-xl md:text-2xl font-black leading-tight tracking-tight text-white line-clamp-2">
+              {anime.title}
+            </h2>
+
+            <p className="text-[11px] md:text-[12px] text-gray-200/70 max-w-xs leading-relaxed line-clamp-2">
+              {anime.description}
+            </p>
+
+            <div className="flex items-center gap-3 text-[10px] font-bold tracking-wider text-yellow-400/80 uppercase">
+              <span className="text-white/60">{anime.releaseYear}</span>
+              <div className="w-1.5 h-1.5 bg-yellow-500/50 rounded-sm rotate-45" />
+              <span className="text-white/60">{anime.status}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
-];
+);
+
+export default function App() {
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedAnime, setSelectedAnime] = useState<Anime | null>(null);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [isChanging, setIsChanging] = useState(false);
+
+  // 👇 Platzhalter für "My Comment" (später machst du es dynamisch)
+  const MY_COMMENT_PLACEHOLDER =
+    '📝 My Comment: (hier kommt später dein Kommentar rein — z.B. warum der Anime ein GOAT ist)';
+
+  const railRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
+  const filteredAnime = useMemo(() => {
+    return ANIME_LIST.filter((a) => {
+      const matchCat = selectedCategory === 'All' || a.category === selectedCategory;
+      const matchSearch = a.title.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchCat && matchSearch;
+    });
+  }, [selectedCategory, searchQuery]);
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (window.innerWidth < 768) return;
+      if (selectedAnime || isChanging) return;
+
+      let foundId: string | null = null;
+      for (const [id, el] of Object.entries(cardRefs.current)) {
+        if (!el) continue;
+        const rect = el.getBoundingClientRect();
+        if (e.clientX >= rect.left && e.clientX <= rect.right) {
+          foundId = id;
+          break;
+        }
+      }
+      if (foundId !== hoveredId) setHoveredId(foundId);
+    },
+    [hoveredId, selectedAnime, isChanging]
+  );
+
+  const handleMouseLeave = useCallback(() => {
+    if (window.innerWidth >= 768) setHoveredId(null);
+  }, []);
+
+  useEffect(() => {
+    if (window.innerWidth >= 768) return;
+
+    const root = railRef.current;
+    if (!root) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        let best: { id: string; ratio: number } | null = null;
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const id = entry.target.getAttribute('data-id');
+          if (!id) return;
+          const ratio = entry.intersectionRatio ?? 0;
+          if (!best || ratio > best.ratio) best = { id, ratio };
+        });
+        if (best) setHoveredId(best.id);
+      },
+      { root, threshold: [0.5, 0.6, 0.7], rootMargin: '0px -40% 0px -40%' }
+    );
+
+    Object.values(cardRefs.current).forEach((el) => el && observer.observe(el));
+    return () => observer.disconnect();
+  }, [filteredAnime]);
+
+  const handleCategoryChange = useCallback(
+    (cat: string) => {
+      if (cat === selectedCategory || isChanging) return;
+      setIsChanging(true);
+      setHoveredId(null);
+
+      setTimeout(() => {
+        setSelectedCategory(cat);
+        setIsChanging(false);
+        railRef.current?.scrollTo({ left: 0, behavior: 'auto' });
+      }, 280);
+    },
+    [selectedCategory, isChanging]
+  );
+
+  const closeFocus = useCallback(() => setSelectedAnime(null), []);
+
+  const openExternalTrailer = (anime: Anime) => {
+    const query = encodeURIComponent(anime.title + ' official trailer anime');
+    window.open(`https://www.youtube.com/results?search_query=${query}`, '_blank', 'noopener,noreferrer');
+  };
+
+  useEffect(() => {
+    if (!selectedAnime) return;
+
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeFocus();
+    };
+    window.addEventListener('keydown', onKey);
+
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [selectedAnime, closeFocus]);
+
+  return (
+    <div className="relative h-screen w-screen text-white overflow-hidden select-none bg-[#050505]">
+      <ThemedStyles />
+      <Cursor />
+
+      {/* BACKGROUND */}
+      <div className="absolute inset-0 pointer-events-none z-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#070707] via-[#040404] to-[#0b0708]" />
+        <div className="absolute -top-48 left-1/2 -translate-x-1/2 w-[130vw] h-[75vh] rounded-full blur-[120px] opacity-[0.18] bg-[radial-gradient(circle_at_center,rgba(234,179,8,0.55),transparent_60%)]" />
+        <div className="absolute -bottom-40 -right-40 w-[70vw] h-[65vh] blur-[150px] opacity-[0.12] bg-[radial-gradient(circle_at_center,rgba(239,68,68,0.45),transparent_60%)]" />
+        <div className="absolute -bottom-52 -left-52 w-[70vw] h-[65vh] blur-[160px] opacity-[0.10] bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.35),transparent_60%)]" />
+        <div className="absolute inset-0 opacity-[0.07] bg-[linear-gradient(90deg,transparent,rgba(234,179,8,0.35),transparent)]" />
+      </div>
+
+      {/* HEADER */}
+      <header className="fixed top-0 left-0 right-0 z-50">
+        <div className="mx-auto max-w-[1920px] px-4 md:px-10 pt-4 md:pt-6">
+          <div className="bg-black/55 backdrop-blur-xl border border-yellow-500/12 rounded-3xl shadow-[0_20px_80px_rgba(0,0,0,0.55)]">
+            <div className="px-4 md:px-6 py-4 md:py-5">
+              <div className="grid grid-cols-1 lg:grid-cols-[auto,1fr,360px] gap-4 md:gap-5 items-center">
+                {/* Brand */}
+                <div className="min-w-0">
+                  <h1 className="text-base md:text-lg font-black tracking-tight text-yellow-400 whitespace-nowrap">
+                    EISFLY´S ARCHIVE
+                  </h1>
+                  <p className="text-[10px] md:text-[11px] font-semibold tracking-wide text-white/35">
+                    Archive Record
+                  </p>
+                </div>
+
+                {/* Filters */}
+                <div className="w-full min-w-0">
+                  <div className="themed-scrollbar-sm overflow-x-auto px-1 py-1">
+                    <div className="flex gap-2.5 md:gap-3.5 min-w-max">
+                      {CATEGORIES.map((cat) => {
+                        const active = selectedCategory === cat;
+                        return (
+                          <button
+                            key={cat}
+                            onClick={() => handleCategoryChange(cat)}
+                            className={`
+                              px-4 md:px-4.5 py-2 md:py-2.5 rounded-full
+                              text-[12px] md:text-[13px] font-semibold tracking-wide
+                              transition-all duration-300
+                              border
+                              ${active
+                                ? 'bg-yellow-500/18 border-yellow-400/35 text-yellow-200 shadow-[0_0_20px_rgba(234,179,8,0.16)]'
+                                : 'bg-white/5 border-white/10 text-white/55 hover:text-white hover:bg-white/8 hover:border-yellow-500/25'}
+                            `}
+                          >
+                            {cat}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Search */}
+                <div className="w-full lg:w-[360px] min-w-0">
+                  <div className="search-shell">
+                    <div className="search-inner flex items-center gap-3 px-3 py-2.5">
+                      <div className="w-9 h-9 rounded-xl bg-yellow-500/10 border border-yellow-500/15 flex items-center justify-center text-yellow-300 shadow-[0_0_18px_rgba(234,179,8,0.12)]">
+                        ⌕
+                      </div>
+
+                      <input
+                        type="text"
+                        placeholder="SEARCHING..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="search-input text-[14px] md:text-[14px] font-semibold tracking-wide"
+                      />
+
+                      <div className="hidden lg:flex items-center gap-2">
+                        <span className="search-kbd text-[11px] font-bold rounded-lg px-2 py-1">Enter</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className="mt-2 text-[11px] text-white/28 hidden md:block">
+                    Tip: type a title to filter instantly ✨
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* RAIL (hidden when modal open -> performance) */}
+      {!selectedAnime && (
+        <main
+          ref={railRef}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          className={`
+            kinetic-rail themed-scrollbar relative h-full flex items-center
+            px-6 md:px-24 lg:px-56 gap-2 md:gap-3 overflow-x-auto
+            pt-28 md:pt-28
+            transition-all duration-[650ms]
+            ${isChanging ? 'opacity-0 scale-[0.99] blur-md translate-y-3' : 'opacity-100 scale-100 blur-0 translate-y-0'}
+          `}
+        >
+          {filteredAnime.length === 0 ? (
+            <div className="w-full text-center py-20">
+              <h2 className="text-2xl md:text-4xl font-black text-white/10 tracking-widest uppercase">
+                No results
+              </h2>
+            </div>
+          ) : (
+            filteredAnime.map((anime) => (
+              <div key={anime.id} data-id={anime.id} className="scroll-snap-align-center">
+                <AnimeCard
+                  anime={anime}
+                  isHovered={hoveredId === anime.id}
+                  onClick={() => {
+                    if (window.innerWidth < 768 && hoveredId !== anime.id) {
+                      setHoveredId(anime.id);
+                    } else {
+                      setSelectedAnime(anime);
+                    }
+                  }}
+                  cardRef={(el) => {
+                    cardRefs.current[anime.id] = el;
+                  }}
+                />
+              </div>
+            ))
+          )}
+        </main>
+      )}
+
+      {/* MODAL */}
+      {selectedAnime && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-0 md:p-8 lg:p-14">
+          <div className="absolute inset-0 bg-black/85" onClick={closeFocus} aria-hidden="true" />
+
+          <div
+            className="
+              relative w-full max-w-6xl h-full md:h-[82vh]
+              bg-white/5 backdrop-blur-xl
+              border border-yellow-500/15
+              rounded-none md:rounded-[28px]
+              overflow-hidden
+              flex flex-col lg:flex-row
+              shadow-[0_30px_120px_rgba(0,0,0,0.75)]
+            "
+            role="dialog"
+            aria-modal="true"
+          >
+            {/* Left Cover */}
+            <div className="lg:w-[42%] h-[40%] lg:h-full relative overflow-hidden">
+              <img
+                src={selectedAnime.coverImageURL}
+                alt={selectedAnime.title}
+                className="w-full h-full object-cover object-top"
+                decoding="async"
+                draggable={false}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent lg:hidden" />
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-black/60 hidden lg:block" />
+
+              <button
+                onClick={closeFocus}
+                className="
+                  absolute top-4 left-4 md:top-6 md:left-6
+                  w-11 h-11 rounded-2xl
+                  border border-white/15 bg-black/30 backdrop-blur-md
+                  flex items-center justify-center
+                  hover:bg-yellow-500 hover:text-black hover:border-yellow-400/30
+                  transition-all duration-300 z-50
+                "
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Right Content */}
+            <div className="themed-scrollbar flex-1 p-6 md:p-10 lg:p-12 overflow-y-auto">
+              {/* ✅ Statt "mw-1" / Abkürzung: My Comment Placeholder */}
+              <div className="rounded-2xl border border-yellow-500/15 bg-yellow-500/8 px-4 py-3 mb-5">
+                <p className="text-[12px] md:text-[13px] font-semibold text-yellow-200/90">
+                  {MY_COMMENT_PLACEHOLDER}
+                </p>
+              </div>
+
+              <h2 className="text-2xl md:text-4xl lg:text-5xl font-black tracking-tight text-white mb-4">
+                {selectedAnime.title}
+              </h2>
+
+              {/* Genres */}
+              <div className="bg-black/25 border border-white/10 rounded-2xl p-4 md:p-5 mb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm font-semibold text-white/70">Genres</p>
+                  <p className="text-xs text-white/35">{selectedAnime.genres.length}</p>
+                </div>
+                <div className="themed-scrollbar-sm overflow-x-auto pb-2 -mb-2">
+                  <div className="flex gap-2.5 min-w-max">
+                    {selectedAnime.genres.map((g) => (
+                      <span
+                        key={g}
+                        className="
+                          px-3.5 py-1.5 rounded-full
+                          border border-yellow-500/18
+                          bg-yellow-500/10
+                          text-[12px] font-semibold text-yellow-100/90
+                          hover:bg-yellow-500/18
+                          transition-all duration-200
+                        "
+                      >
+                        {g}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-4 md:gap-5 mb-6">
+                <div className="rounded-2xl border border-white/10 bg-black/25 p-4 md:p-5">
+                  <p className="text-xs text-white/40 font-semibold tracking-wide mb-1">Release</p>
+                  <p className="text-xl md:text-2xl font-black text-yellow-300">{selectedAnime.releaseYear}</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-black/25 p-4 md:p-5">
+                  <p className="text-xs text-white/40 font-semibold tracking-wide mb-1">Status</p>
+                  <p className="text-xl md:text-2xl font-black text-yellow-300 uppercase">{selectedAnime.status}</p>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="rounded-2xl border border-white/10 bg-black/25 p-4 md:p-6 mb-7">
+                <p className="text-sm font-semibold text-white/70 mb-2">Description</p>
+                <p className="text-sm md:text-base text-white/70 leading-relaxed">
+                  “{selectedAnime.description}”
+                </p>
+              </div>
+
+              {/* Actions */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  className="
+                    flex-1 rounded-2xl py-3.5 px-6
+                    bg-yellow-500 text-black font-black text-sm
+                    hover:bg-yellow-400 transition-all duration-200
+                    shadow-[0_12px_40px_rgba(234,179,8,0.18)]
+                  "
+                  onClick={() =>
+                    window.open(
+                      `https://myanimelist.net/search/all?q=${encodeURIComponent(selectedAnime.title)}`,
+                      '_blank',
+                      'noopener,noreferrer'
+                    )
+                  }
+                >
+                  Explore
+                </button>
+
+                <button
+                  className="
+                    flex-1 rounded-2xl py-3.5 px-6
+                    border border-yellow-500/35 bg-white/5 text-yellow-200 font-black text-sm
+                    hover:bg-yellow-500 hover:text-black hover:border-yellow-400/30
+                    transition-all duration-200
+                  "
+                  onClick={() => openExternalTrailer(selectedAnime)}
+                >
+                  Trailer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* FOOTER */}
+      <footer className="fixed bottom-0 left-0 right-0 p-4 md:p-10 flex justify-between items-end pointer-events-none z-40">
+        <div />
+        <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-white/10 bg-black/35 backdrop-blur-xl px-4 py-2">
+          <div className="flex gap-2 items-center">
+            {CATEGORIES.map((_, i) => (
+              <div
+                key={i}
+                className={`w-1.5 h-1.5 rounded-full transition-all duration-500 ${
+                  CATEGORIES.indexOf(selectedCategory) === i
+                    ? 'bg-yellow-400 shadow-[0_0_12px_rgba(234,179,8,0.9)] scale-125'
+                    : 'bg-white/15'
+                }`}
+              />
+            ))}
+          </div>
+          <span className="text-xs text-white/35 font-semibold tracking-wide">Archive</span>
+        </div>
+      </footer>
+    </div>
+  );
+}
