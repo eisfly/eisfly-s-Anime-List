@@ -145,18 +145,15 @@ const AnimeCard = memo(
               isHovered ? 'opacity-95' : 'opacity-75'
             }`}
           />
-          {/* soft glass highlight */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(234,179,8,0.18),transparent_55%)] opacity-70" />
         </div>
 
-        {/* modern corners */}
         <div
           className={`absolute inset-0 rounded-3xl ring-1 ring-yellow-500/10 transition-all duration-500 ${
             isHovered ? 'ring-yellow-500/25' : ''
           }`}
         />
 
-        {/* Collapsed Title */}
         <div
           className={`absolute bottom-0 left-0 w-full px-5 pb-5 pt-10 transition-all duration-300 pointer-events-none ${
             isHovered ? 'opacity-0 translate-y-6' : 'opacity-100 translate-y-0'
@@ -167,7 +164,6 @@ const AnimeCard = memo(
           </h3>
         </div>
 
-        {/* Expanded Details */}
         <div
           className={`absolute inset-0 flex flex-col justify-end p-6 md:p-7 transition-all duration-500 pointer-events-none ${
             isHovered ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
@@ -324,72 +320,71 @@ export default function App() {
         <div className="absolute inset-0 opacity-[0.07] bg-[linear-gradient(90deg,transparent,rgba(234,179,8,0.35),transparent)]" />
       </div>
 
-      {/* HEADER (more modern, rounder, less “cinzel-heavy” on filters) */}
+      {/* HEADER */}
       <header className="fixed top-0 left-0 right-0 z-50">
         <div className="mx-auto max-w-[1920px] px-4 md:px-10 pt-4 md:pt-6">
           <div className="bg-black/55 backdrop-blur-xl border border-yellow-500/12 rounded-3xl shadow-[0_20px_80px_rgba(0,0,0,0.55)]">
-            <div className="px-4 md:px-6 py-4 md:py-5 flex flex-col lg:flex-row items-center justify-between gap-4 md:gap-6">
-              {/* Brand */}
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 md:w-11 md:h-11 rounded-2xl border border-yellow-500/35 bg-yellow-500/10 flex items-center justify-center text-yellow-400 font-black shadow-[0_0_18px_rgba(234,179,8,0.18)]">
-                  Ω
-                </div>
-                <div>
-                  <h1 className="text-base md:text-lg font-black tracking-tight text-yellow-400">
-                    Eisfly Archive
+            <div className="px-4 md:px-6 py-4 md:py-5">
+              {/* Layout: stack on mobile, 3 columns on desktop */}
+              <div className="grid grid-cols-1 lg:grid-cols-[auto,1fr,360px] gap-4 md:gap-5 items-center">
+                {/* Brand (Omega entfernt) */}
+                <div className="min-w-0">
+                  <h1 className="text-base md:text-lg font-black tracking-tight text-yellow-400 whitespace-nowrap">
+                    EISFLY´S ARCHIVE
                   </h1>
                   <p className="text-[10px] md:text-[11px] font-semibold tracking-wide text-white/35">
                     Archive Record
                   </p>
                 </div>
-              </div>
 
-              {/* Filters (less cramped, modern pills) */}
-              <div className="w-full lg:w-auto">
-                <div className="themed-scrollbar-sm overflow-x-auto px-1 py-1">
-                  <div className="flex gap-2.5 md:gap-3.5 min-w-max">
-                    {CATEGORIES.map((cat) => {
-                      const active = selectedCategory === cat;
-                      return (
-                        <button
-                          key={cat}
-                          onClick={() => handleCategoryChange(cat)}
-                          className={`
-                            px-4 md:px-4.5 py-2 md:py-2.5 rounded-full
-                            text-[12px] md:text-[13px] font-semibold tracking-wide
-                            transition-all duration-300
-                            border
-                            ${active
-                              ? 'bg-yellow-500/18 border-yellow-400/35 text-yellow-200 shadow-[0_0_20px_rgba(234,179,8,0.16)]'
-                              : 'bg-white/5 border-white/10 text-white/55 hover:text-white hover:bg-white/8 hover:border-yellow-500/25'}
-                          `}
-                        >
-                          {cat}
-                        </button>
-                      );
-                    })}
+                {/* Filters */}
+                <div className="w-full min-w-0">
+                  <div className="themed-scrollbar-sm overflow-x-auto px-1 py-1">
+                    <div className="flex gap-2.5 md:gap-3.5 min-w-max">
+                      {CATEGORIES.map((cat) => {
+                        const active = selectedCategory === cat;
+                        return (
+                          <button
+                            key={cat}
+                            onClick={() => handleCategoryChange(cat)}
+                            className={`
+                              px-4 md:px-4.5 py-2 md:py-2.5 rounded-full
+                              text-[12px] md:text-[13px] font-semibold tracking-wide
+                              transition-all duration-300
+                              border
+                              ${active
+                                ? 'bg-yellow-500/18 border-yellow-400/35 text-yellow-200 shadow-[0_0_20px_rgba(234,179,8,0.16)]'
+                                : 'bg-white/5 border-white/10 text-white/55 hover:text-white hover:bg-white/8 hover:border-yellow-500/25'}
+                            `}
+                          >
+                            {cat}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Search */}
-              <div className="relative w-full lg:w-[340px]">
-                <div className="absolute inset-y-0 left-3 flex items-center text-yellow-400/70">
-                  <span className="text-sm">⌕</span>
+                {/* Search (mehr Platz, nicht eingequetscht) */}
+                <div className="relative w-full lg:w-[360px] min-w-0">
+                  <div className="absolute inset-y-0 left-3 flex items-center text-yellow-400/70">
+                    <span className="text-sm">⌕</span>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="SEARCHING..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="
+                      w-full rounded-2xl bg-white/6 border border-white/12
+                      pl-10 pr-4 py-3.5
+                      text-sm md:text-[14px]
+                      outline-none transition-all
+                      focus:border-yellow-500/35 focus:bg-white/8
+                      placeholder:text-white/30 text-white/85
+                    "
+                  />
                 </div>
-                <input
-                  type="text"
-                  placeholder="SEARCHING..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="
-                    w-full rounded-2xl bg-white/5 border border-white/10
-                    pl-10 pr-4 py-3 text-sm md:text-[14px]
-                    outline-none transition-all
-                    focus:border-yellow-500/35 focus:bg-white/7
-                    placeholder:text-white/30 text-white/85
-                  "
-                />
               </div>
             </div>
           </div>
@@ -496,7 +491,7 @@ export default function App() {
                 {selectedAnime.title}
               </h2>
 
-              {/* Genres (more spacious, less cramped) */}
+              {/* Genres */}
               <div className="bg-black/25 border border-white/10 rounded-2xl p-4 md:p-5 mb-6">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-sm font-semibold text-white/70">Genres</p>
@@ -580,7 +575,7 @@ export default function App() {
         </div>
       )}
 
-      {/* FOOTER (softer, modern) */}
+      {/* FOOTER */}
       <footer className="fixed bottom-0 left-0 right-0 p-4 md:p-10 flex justify-between items-end pointer-events-none z-40">
         <div />
         <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-white/10 bg-black/35 backdrop-blur-xl px-4 py-2">
