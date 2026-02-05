@@ -286,15 +286,20 @@ export default function App() {
   const railRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
-  // ✅ “Good” Kategorie robust finden (falls in constants z.B. "good" steht)
-  const GOOD_KEY = useMemo(() => {
-    const direct = CATEGORIES.find((c) => c === 'Good');
-    if (direct) return direct;
-    const lower = CATEGORIES.find((c) => c.toLowerCase() === 'good');
-    return lower ?? 'Good';
+  // ✅ Ziel: Charlotte NUR im Filter "Good Anime" (nicht in All)
+  const GOOD_ANIME_KEY = useMemo(() => {
+    const exact = CATEGORIES.find((c) => c === 'Good Anime');
+    if (exact) return exact;
+
+    const lower = CATEGORIES.find((c) => c.toLowerCase() === 'good anime');
+    if (lower) return lower;
+
+    // fallback (falls du es so benannt hast)
+    const alt = CATEGORIES.find((c) => c.toLowerCase().includes('good') && c.toLowerCase().includes('anime'));
+    return alt ?? 'Good Anime';
   }, []);
 
-  // ✅ Charlotte Objekt (category = Good)
+  // ✅ Charlotte Objekt (Category = Good Anime)
   const CHARLOTTE: Anime = useMemo(
     () => ({
       id: 'charlotte',
@@ -302,36 +307,41 @@ export default function App() {
       description:
         'A boy discovers his supernatural ability—and gets pulled into a secret war between gifted teenagers. Emotional, weird, and worth the ride.',
       coverImageURL:
-        'https://images.unsplash.com/photo-1541963463532-d68292c34b19?auto=format&fit=crop&w=1200&q=60',
+        'https://images.unsplash.com/photo-1541963463532-d68292c34b19?auto=format&fit=crop&w=1200&q=60', // Placeholder: ersetz mit echtem Cover
       genres: ['Drama', 'Supernatural', 'School', 'Comedy'],
       releaseYear: 2015,
       status: 'Finished',
-      category: GOOD_KEY as any,
+      category: GOOD_ANIME_KEY,
     }),
-    [GOOD_KEY]
+    [GOOD_ANIME_KEY]
   );
 
-  // ✅ EXTREM WICHTIG:
-  // Charlotte soll NUR in "Good" auftauchen -> NICHT in "All"
+  // ✅ Active list: Charlotte wird NUR hinzugefügt, wenn Good Anime aktiv ist
   const ACTIVE_LIST: Anime[] = useMemo(() => {
-    // base
     const base = ANIME_LIST;
 
-    if (selectedCategory !== GOOD_KEY) return base;
+    if (selectedCategory !== GOOD_ANIME_KEY) return base;
 
-    // nur wenn Good aktiv ist, adden (wenn nicht schon vorhanden)
-    const exists = base.some((a) => a.title.toLowerCase() === 'charlotte');
-    return exists ? base : [...base, CHARLOTTE];
-  }, [selectedCategory, GOOD_KEY, CHARLOTTE]);
+    const existsByTitle = base.some((a) => a.title.trim().toLowerCase() === 'charlotte');
+    const existsById = base.some((a) => String(a.id).trim().toLowerCase() === 'charlotte');
 
-  // ✅ Genre-Liste basiert auf der aktuell aktiven Liste
+    return existsByTitle || existsById ? base : [...base, CHARLOTTE];
+  }, [selectedCategory, GOOD_ANIME_KEY, CHARLOTTE]);
+
+  // ✅ Genre Dropdown: aus der aktuell aktiven Liste generieren (inkl. Charlotte wenn Good Anime aktiv)
   const ALL_GENRES = useMemo(() => {
     const set = new Set<string>();
     ACTIVE_LIST.forEach((a) => a.genres.forEach((g) => set.add(g)));
     return ['All', ...Array.from(set).sort((a, b) => a.localeCompare(b))];
   }, [ACTIVE_LIST]);
 
-  // ✅ Filter: Category + Search + Genre
+  // ✅ Wenn Genre nach Category-Wechsel nicht mehr existiert, reset
+  useEffect(() => {
+    if (selectedGenre === 'All') return;
+    if (!ALL_GENRES.includes(selectedGenre)) setSelectedGenre('All');
+  }, [ALL_GENRES, selectedGenre]);
+
+  // ✅ Final Filter: Category + Search + Genre (Genre filtert auch die hinzugefügten Anime)
   const filteredAnime = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
 
@@ -342,12 +352,6 @@ export default function App() {
       return matchCat && matchSearch && matchGenre;
     });
   }, [ACTIVE_LIST, selectedCategory, searchQuery, selectedGenre]);
-
-  // ✅ Wenn Genre nicht mehr existiert (z.B. Kategorie gewechselt), reset auf All
-  useEffect(() => {
-    if (selectedGenre === 'All') return;
-    if (!ALL_GENRES.includes(selectedGenre)) setSelectedGenre('All');
-  }, [ALL_GENRES, selectedGenre]);
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
@@ -372,7 +376,7 @@ export default function App() {
     if (window.innerWidth >= 768) setHoveredId(null);
   }, []);
 
-  // ✅ Mobile observer: erst nach render (RAF), sonst fehlen refs
+  // ✅ Mobile observer: erst nach render starten (damit refs wirklich da sind)
   useEffect(() => {
     if (window.innerWidth >= 768) return;
 
@@ -427,6 +431,7 @@ export default function App() {
 
   const closeFocus = useCallback(() => setSelectedAnime(null), []);
 
+  // ✅ Trailer Button bleibt drin (muss nicht in Daten sein)
   const openExternalTrailer = (anime: Anime) => {
     const query = encodeURIComponent(anime.title + ' official trailer anime');
     window.open(`https://www.youtube.com/results?search_query=${query}`, '_blank', 'noopener,noreferrer');
@@ -468,8 +473,8 @@ export default function App() {
         <div className="mx-auto max-w-[1920px] px-4 md:px-10 pt-4 md:pt-6">
           <div className="bg-black/55 backdrop-blur-xl border border-yellow-500/12 rounded-3xl shadow-[0_20px_80px_rgba(0,0,0,0.55)]">
             <div className="px-4 md:px-6 py-4 md:py-5">
-              {/* Brand | Filter | Genre | Search */}
               <div className="grid grid-cols-1 lg:grid-cols-[auto,1fr,260px,360px] gap-4 md:gap-5 items-center">
+                {/* Brand */}
                 <div className="min-w-0">
                   <h1 className="text-base md:text-lg font-black tracking-tight text-yellow-400 whitespace-nowrap">
                     EISFLY´S ARCHIVE
@@ -479,6 +484,7 @@ export default function App() {
                   </p>
                 </div>
 
+                {/* Category Filters */}
                 <div className="w-full min-w-0">
                   <div className="themed-scrollbar-sm overflow-x-auto px-1 py-1">
                     <div className="flex gap-2.5 md:gap-3.5 min-w-max">
@@ -624,6 +630,7 @@ export default function App() {
             role="dialog"
             aria-modal="true"
           >
+            {/* Left Cover */}
             <div className="lg:w-[42%] h-[40%] lg:h-full relative overflow-hidden">
               <img
                 src={selectedAnime.coverImageURL}
@@ -651,6 +658,7 @@ export default function App() {
               </button>
             </div>
 
+            {/* Right Content */}
             <div className="themed-scrollbar flex-1 p-6 md:p-10 lg:p-12 overflow-y-auto">
               <div className="rounded-2xl border border-yellow-500/15 bg-yellow-500/8 px-4 py-3 mb-5">
                 <p className="text-[12px] md:text-[13px] font-semibold text-yellow-200/90">
@@ -706,6 +714,7 @@ export default function App() {
                 </p>
               </div>
 
+              {/* Buttons (Trailer bleibt drin) */}
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   className="
