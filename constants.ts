@@ -3,7 +3,7 @@ import { ANIME_LIST, CATEGORIES } from './constants';
 import { Anime } from './types';
 
 /* =========================
-   THEMED SCROLLBAR + SEARCH + SELECT CSS
+   THEMED SCROLLBAR + SEARCH CSS
 ========================= */
 const ThemedStyles = () => (
   <style>{`
@@ -85,41 +85,11 @@ const ThemedStyles = () => (
       background: rgba(234,179,8,0.08);
       color: rgba(234,179,8,0.75);
     }
-
-    /* ===== Themed Select (Genre Filter) ===== */
-    .select-shell {
-      position: relative;
-      border-radius: 18px;
-      padding: 1px;
-      background: radial-gradient(120% 120% at 20% 0%, rgba(234,179,8,0.28), transparent 55%),
-                  linear-gradient(90deg, rgba(234,179,8,0.26), rgba(234,179,8,0.05), rgba(234,179,8,0.26));
-      box-shadow: 0 18px 60px rgba(0,0,0,0.35);
-    }
-    .select-inner {
-      border-radius: 17px;
-      background: linear-gradient(180deg, rgba(0,0,0,0.38), rgba(0,0,0,0.18));
-      border: 1px solid rgba(255,255,255,0.06);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-    }
-    .genre-select {
-      width: 100%;
-      outline: none;
-      background: transparent;
-      color: rgba(255,255,255,0.88);
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-    }
-    .genre-select option {
-      background: #0a0a0a;
-      color: rgba(255,255,255,0.9);
-    }
   `}</style>
 );
 
 /* =========================
-   CURSOR
+   CURSOR (modern + smooth)
 ========================= */
 const Cursor = () => {
   const cursorRef = useRef<HTMLDivElement>(null);
@@ -274,88 +244,25 @@ const AnimeCard = memo(
 
 export default function App() {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
-  const [selectedGenre, setSelectedGenre] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAnime, setSelectedAnime] = useState<Anime | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [isChanging, setIsChanging] = useState(false);
 
+  // 👇 Platzhalter für "My Comment" (später machst du es dynamisch)
   const MY_COMMENT_PLACEHOLDER =
     '📝 My Comment: (hier kommt später dein Kommentar rein — z.B. warum der Anime ein GOAT ist)';
 
   const railRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
-  // ✅ Wichtig: Keys überall als string -> verhindert Hover/Active Bugs
-  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
-
-  const getAnimeKey = useCallback((a: Anime) => String(a.id), []);
-
-  // ✅ Ziel: Charlotte NUR im Filter "Good Anime"
-  const GOOD_ANIME_KEY = useMemo(() => {
-    const exact = CATEGORIES.find((c) => c === 'Good Anime');
-    if (exact) return exact;
-
-    const lower = CATEGORIES.find((c) => c.toLowerCase() === 'good anime');
-    if (lower) return lower;
-
-    const alt = CATEGORIES.find((c) => c.toLowerCase().includes('good') && c.toLowerCase().includes('anime'));
-    return alt ?? 'Good Anime';
-  }, []);
-
-  // ✅ Charlotte Objekt (Category = Good Anime)
-  const CHARLOTTE: Anime = useMemo(
-    () =>
-      ({
-        id: 'charlotte',
-        title: 'Charlotte',
-        description:
-          'A boy discovers his supernatural ability—and gets pulled into a secret war between gifted teenagers. Emotional, weird, and worth the ride.',
-        coverImageURL:
-          'https://images.unsplash.com/photo-1541963463532-d68292c34b19?auto=format&fit=crop&w=1200&q=60',
-        genres: ['Drama', 'Supernatural', 'School', 'Comedy'],
-        releaseYear: 2015,
-        status: 'Finished',
-        category: GOOD_ANIME_KEY,
-      } as Anime),
-    [GOOD_ANIME_KEY]
-  );
-
-  // ✅ Active list: Charlotte wird NUR hinzugefügt, wenn Good Anime aktiv ist
-  const ACTIVE_LIST: Anime[] = useMemo(() => {
-    const base = ANIME_LIST;
-
-    if (selectedCategory !== GOOD_ANIME_KEY) return base;
-
-    const existsByTitle = base.some((a) => a.title.trim().toLowerCase() === 'charlotte');
-    const existsById = base.some((a) => String(a.id).trim().toLowerCase() === 'charlotte');
-
-    return existsByTitle || existsById ? base : [...base, CHARLOTTE];
-  }, [selectedCategory, GOOD_ANIME_KEY, CHARLOTTE]);
-
-  // ✅ Genre Dropdown: aus der aktuell aktiven Liste (inkl. Charlotte wenn Good Anime aktiv)
-  const ALL_GENRES = useMemo(() => {
-    const set = new Set<string>();
-    ACTIVE_LIST.forEach((a) => a.genres.forEach((g) => set.add(g)));
-    return ['All', ...Array.from(set).sort((a, b) => a.localeCompare(b))];
-  }, [ACTIVE_LIST]);
-
-  // ✅ Wenn Genre nach Category-Wechsel nicht mehr existiert -> reset
-  useEffect(() => {
-    if (selectedGenre === 'All') return;
-    if (!ALL_GENRES.includes(selectedGenre)) setSelectedGenre('All');
-  }, [ALL_GENRES, selectedGenre]);
-
-  // ✅ Final Filter: Category + Search + Genre
   const filteredAnime = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
-
-    return ACTIVE_LIST.filter((a) => {
+    return ANIME_LIST.filter((a) => {
       const matchCat = selectedCategory === 'All' || a.category === selectedCategory;
-      const matchSearch = q === '' || a.title.toLowerCase().includes(q);
-      const matchGenre = selectedGenre === 'All' || a.genres.includes(selectedGenre);
-      return matchCat && matchSearch && matchGenre;
+      const matchSearch = a.title.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchCat && matchSearch;
     });
-  }, [ACTIVE_LIST, selectedCategory, searchQuery, selectedGenre]);
+  }, [selectedCategory, searchQuery]);
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
@@ -380,42 +287,29 @@ export default function App() {
     if (window.innerWidth >= 768) setHoveredId(null);
   }, []);
 
-  // ✅ Mobile observer: nach render starten (refs sind dann vorhanden)
   useEffect(() => {
     if (window.innerWidth >= 768) return;
 
     const root = railRef.current;
     if (!root) return;
 
-    let observer: IntersectionObserver | null = null;
-    let raf = 0;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        let best: { id: string; ratio: number } | null = null;
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const id = entry.target.getAttribute('data-id');
+          if (!id) return;
+          const ratio = entry.intersectionRatio ?? 0;
+          if (!best || ratio > best.ratio) best = { id, ratio };
+        });
+        if (best) setHoveredId(best.id);
+      },
+      { root, threshold: [0.5, 0.6, 0.7], rootMargin: '0px -40% 0px -40%' }
+    );
 
-    raf = requestAnimationFrame(() => {
-      observer = new IntersectionObserver(
-        (entries) => {
-          let best: { id: string; ratio: number } | null = null;
-
-          for (const entry of entries) {
-            if (!entry.isIntersecting) continue;
-            const id = entry.target.getAttribute('data-id');
-            if (!id) continue;
-
-            const ratio = entry.intersectionRatio ?? 0;
-            if (!best || ratio > best.ratio) best = { id, ratio };
-          }
-
-          if (best) setHoveredId(best.id);
-        },
-        { root, threshold: [0.5, 0.6, 0.7], rootMargin: '0px -40% 0px -40%' }
-      );
-
-      Object.values(cardRefs.current).forEach((el) => el && observer!.observe(el));
-    });
-
-    return () => {
-      cancelAnimationFrame(raf);
-      observer?.disconnect();
-    };
+    Object.values(cardRefs.current).forEach((el) => el && observer.observe(el));
+    return () => observer.disconnect();
   }, [filteredAnime]);
 
   const handleCategoryChange = useCallback(
@@ -435,7 +329,6 @@ export default function App() {
 
   const closeFocus = useCallback(() => setSelectedAnime(null), []);
 
-  // ✅ Trailer Button bleibt (Daten müssen keinen trailerUrl haben)
   const openExternalTrailer = (anime: Anime) => {
     const query = encodeURIComponent(anime.title + ' official trailer anime');
     window.open(`https://www.youtube.com/results?search_query=${query}`, '_blank', 'noopener,noreferrer');
@@ -477,7 +370,7 @@ export default function App() {
         <div className="mx-auto max-w-[1920px] px-4 md:px-10 pt-4 md:pt-6">
           <div className="bg-black/55 backdrop-blur-xl border border-yellow-500/12 rounded-3xl shadow-[0_20px_80px_rgba(0,0,0,0.55)]">
             <div className="px-4 md:px-6 py-4 md:py-5">
-              <div className="grid grid-cols-1 lg:grid-cols-[auto,1fr,260px,360px] gap-4 md:gap-5 items-center">
+              <div className="grid grid-cols-1 lg:grid-cols-[auto,1fr,360px] gap-4 md:gap-5 items-center">
                 {/* Brand */}
                 <div className="min-w-0">
                   <h1 className="text-base md:text-lg font-black tracking-tight text-yellow-400 whitespace-nowrap">
@@ -488,7 +381,7 @@ export default function App() {
                   </p>
                 </div>
 
-                {/* Category Filters */}
+                {/* Filters */}
                 <div className="w-full min-w-0">
                   <div className="themed-scrollbar-sm overflow-x-auto px-1 py-1">
                     <div className="flex gap-2.5 md:gap-3.5 min-w-max">
@@ -501,7 +394,8 @@ export default function App() {
                             className={`
                               px-4 md:px-4.5 py-2 md:py-2.5 rounded-full
                               text-[12px] md:text-[13px] font-semibold tracking-wide
-                              transition-all duration-300 border
+                              transition-all duration-300
+                              border
                               ${active
                                 ? 'bg-yellow-500/18 border-yellow-400/35 text-yellow-200 shadow-[0_0_20px_rgba(234,179,8,0.16)]'
                                 : 'bg-white/5 border-white/10 text-white/55 hover:text-white hover:bg-white/8 hover:border-yellow-500/25'}
@@ -511,32 +405,6 @@ export default function App() {
                           </button>
                         );
                       })}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Genre Filter */}
-                <div className="w-full lg:w-[260px] min-w-0">
-                  <div className="select-shell">
-                    <div className="select-inner flex items-center gap-3 px-3 py-2.5">
-                      <div className="w-9 h-9 rounded-xl bg-yellow-500/10 border border-yellow-500/15 flex items-center justify-center text-yellow-300 shadow-[0_0_18px_rgba(234,179,8,0.10)]">
-                        🎭
-                      </div>
-
-                      <select
-                        value={selectedGenre}
-                        onChange={(e) => setSelectedGenre(e.target.value)}
-                        className="genre-select text-[14px] font-semibold tracking-wide"
-                        aria-label="Filter by genre"
-                      >
-                        {ALL_GENRES.map((g) => (
-                          <option key={g} value={g}>
-                            {g === 'All' ? 'All Genres' : g}
-                          </option>
-                        ))}
-                      </select>
-
-                      <div className="pointer-events-none text-yellow-400/60 pr-1">▾</div>
                     </div>
                   </div>
                 </div>
@@ -554,7 +422,7 @@ export default function App() {
                         placeholder="SEARCHING..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="search-input text-[14px] font-semibold tracking-wide"
+                        className="search-input text-[14px] md:text-[14px] font-semibold tracking-wide"
                       />
 
                       <div className="hidden lg:flex items-center gap-2">
@@ -573,7 +441,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* RAIL */}
+      {/* RAIL (hidden when modal open -> performance) */}
       {!selectedAnime && (
         <main
           ref={railRef}
@@ -594,27 +462,24 @@ export default function App() {
               </h2>
             </div>
           ) : (
-            filteredAnime.map((anime) => {
-              const key = getAnimeKey(anime);
-              return (
-                <div key={key} data-id={key} className="scroll-snap-align-center">
-                  <AnimeCard
-                    anime={anime}
-                    isHovered={hoveredId === key}
-                    onClick={() => {
-                      if (window.innerWidth < 768 && hoveredId !== key) {
-                        setHoveredId(key);
-                      } else {
-                        setSelectedAnime(anime);
-                      }
-                    }}
-                    cardRef={(el) => {
-                      cardRefs.current[key] = el;
-                    }}
-                  />
-                </div>
-              );
-            })
+            filteredAnime.map((anime) => (
+              <div key={anime.id} data-id={anime.id} className="scroll-snap-align-center">
+                <AnimeCard
+                  anime={anime}
+                  isHovered={hoveredId === anime.id}
+                  onClick={() => {
+                    if (window.innerWidth < 768 && hoveredId !== anime.id) {
+                      setHoveredId(anime.id);
+                    } else {
+                      setSelectedAnime(anime);
+                    }
+                  }}
+                  cardRef={(el) => {
+                    cardRefs.current[anime.id] = el;
+                  }}
+                />
+              </div>
+            ))
           )}
         </main>
       )}
@@ -667,6 +532,7 @@ export default function App() {
 
             {/* Right Content */}
             <div className="themed-scrollbar flex-1 p-6 md:p-10 lg:p-12 overflow-y-auto">
+              {/* ✅ Statt "mw-1" / Abkürzung: My Comment Placeholder */}
               <div className="rounded-2xl border border-yellow-500/15 bg-yellow-500/8 px-4 py-3 mb-5">
                 <p className="text-[12px] md:text-[13px] font-semibold text-yellow-200/90">
                   {MY_COMMENT_PLACEHOLDER}
@@ -677,6 +543,7 @@ export default function App() {
                 {selectedAnime.title}
               </h2>
 
+              {/* Genres */}
               <div className="bg-black/25 border border-white/10 rounded-2xl p-4 md:p-5 mb-6">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-sm font-semibold text-white/70">Genres</p>
@@ -703,6 +570,7 @@ export default function App() {
                 </div>
               </div>
 
+              {/* Stats */}
               <div className="grid grid-cols-2 gap-4 md:gap-5 mb-6">
                 <div className="rounded-2xl border border-white/10 bg-black/25 p-4 md:p-5">
                   <p className="text-xs text-white/40 font-semibold tracking-wide mb-1">Release</p>
@@ -714,6 +582,7 @@ export default function App() {
                 </div>
               </div>
 
+              {/* Description */}
               <div className="rounded-2xl border border-white/10 bg-black/25 p-4 md:p-6 mb-7">
                 <p className="text-sm font-semibold text-white/70 mb-2">Description</p>
                 <p className="text-sm md:text-base text-white/70 leading-relaxed">
@@ -721,7 +590,7 @@ export default function App() {
                 </p>
               </div>
 
-              {/* Buttons (Trailer bleibt drin) */}
+              {/* Actions */}
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   className="
