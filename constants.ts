@@ -28,7 +28,7 @@ export const ANIME_LIST: Anime[] = [
     description: 'In a dystopia riddled with corruption and cybernetic implants, a talented but reckless street kid strives to become a mercenary outlaw.',
     coverImageURL: 'https://resizing.flixster.com/-XZAfHZM39UwaGJIFWKAE8fS0ak=/v3/t/assets/p22812509_b_v13_ab.jpg',
     releaseYear: 2022,
-    status: 'Finished',
+    status: 'Ongoing',
     trailerUrl: 'https://www.youtube.com/watch?v=JtqIas3bYhg'
   },
   {
@@ -50,7 +50,7 @@ export const ANIME_LIST: Anime[] = [
     description: 'Ichigo Kurosaki becomes a Soul Reaper to protect his town from restless spirits known as Hollows.',
     coverImageURL: 'https://i.pinimg.com/736x/8b/3e/9c/8b3e9c7953d6cdc568b288bdf25b4f10.jpg',
     releaseYear: 2004,
-    status: 'Finished',
+    status: 'Ongoing',
     trailerUrl: 'https://www.youtube.com/watch?v=e8_A7C20u_4'
   },
   {
@@ -72,7 +72,7 @@ export const ANIME_LIST: Anime[] = [
     description: 'In a world of heroes, Izuku Midoriya pursues his dream of becoming the greatest hero despite starting without a quirk.',
     coverImageURL: 'https://external-preview.redd.it/my-hero-academia-season-7-key-visual-v0-h_11UwfFpZN5y-E5dgFYdEbbat8p660xdmNHJpRHomg.jpg?width=640&crop=smart&auto=webp&s=a241f94cfe4f51b4f5a5d1718998422b73738674',
     releaseYear: 2016,
-    status: 'Ongoing',
+    status: 'Finished',
     trailerUrl: 'https://www.youtube.com/watch?v=EPV_P3P-f60'
   },
   {
