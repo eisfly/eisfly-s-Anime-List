@@ -251,4 +251,16 @@ export default function App() {
                         onClick={() => setSelectedAnime(null)}
                         className="px-6 py-3 border-2 border-yellow-500 text-yellow-400 font-semibold text-sm md:text-base rounded-xl hover:bg-yellow-500/20 transition-all flex-1"
                       >
-                        Zurück zur L
+                        Zurück zur Liste
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
