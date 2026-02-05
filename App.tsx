@@ -1,35 +1,45 @@
-import React, { useState, useMemo, useRef, useCallback, memo } from 'react';
+import React, { useState, useMemo, useRef, useCallback, memo, useEffect } from 'react';
 import { ANIME_LIST, CATEGORIES } from './constants';
 import { Anime } from './types';
 
-/* ========== CUSTOM CURSOR (mobil deaktiviert) ========== */
+/* ========== SMOOTH CUSTOM CURSOR ========== */
 const Cursor = () => {
   const cursorRef = useRef<HTMLDivElement>(null);
+  const mousePos = useRef({ x: 0, y: 0 });
+  const cursorPos = useRef({ x: 0, y: 0 });
 
   React.useEffect(() => {
-    // Nur auf Desktop
-    if (window.innerWidth > 768) {
-      document.body.style.cursor = 'none';
-      
-      const moveCursor = (e: MouseEvent) => {
-        if (cursorRef.current) {
-          cursorRef.current.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
-        }
-      };
+    if (window.innerWidth <= 768) return;
 
-      window.addEventListener('mousemove', moveCursor);
-      return () => {
-        window.removeEventListener('mousemove', moveCursor);
-        document.body.style.cursor = '';
-      };
-    }
+    document.body.style.cursor = 'none';
+
+    const moveCursor = (e: MouseEvent) => {
+      mousePos.current = { x: e.clientX, y: e.clientY };
+    };
+
+    const updateCursor = () => {
+      if (cursorRef.current) {
+        cursorPos.current.x += (mousePos.current.x - cursorPos.current.x) * 0.125;
+        cursorPos.current.y += (mousePos.current.y - cursorPos.current.y) * 0.125;
+        cursorRef.current.style.transform = `translate3d(${cursorPos.current.x}px, ${cursorPos.current.y}px, 0)`;
+      }
+      requestAnimationFrame(updateCursor);
+    };
+
+    updateCursor();
+    window.addEventListener('mousemove', moveCursor);
+    
+    return () => {
+      window.removeEventListener('mousemove', moveCursor);
+      document.body.style.cursor = '';
+    };
   }, []);
 
   if (window.innerWidth <= 768) return null;
 
   return (
-    <div ref={cursorRef} className="fixed top-0 left-0 pointer-events-none z-[9999] -translate-x-1/2 -translate-y-1/2 w-0 h-0">
-      <div className="w-6 h-6 rounded-full border border-yellow-500/50 flex items-center justify-center bg-yellow-500/10">
+    <div ref={cursorRef} className="fixed top-0 left-0 pointer-events-none z-[9999] -translate-x-1/2 -translate-y-1/2">
+      <div className="w-6 h-6 rounded-full border border-yellow-500/50 flex items-center justify-center bg-yellow-500/10 backdrop-blur-sm">
         <div className="w-2 h-2 bg-yellow-400 rounded-full" />
       </div>
     </div>
@@ -109,7 +119,7 @@ export default function App() {
     <div className="h-screen w-screen bg-gradient-to-br from-[#030303] to-[#0a0a0a] text-white overflow-hidden">
       <Cursor />
 
-      {/* HEADER - MOBIL OPTIMIERT */}
+      {/* HEADER */}
       <header className="p-4 md:p-6 flex flex-col sm:flex-row gap-4 items-center justify-between border-b border-yellow-500/10">
         <h1 className="text-yellow-500 font-black text-xl md:text-2xl tracking-wide">
           Anime Archive
@@ -139,7 +149,7 @@ export default function App() {
         />
       </header>
 
-      {/* MAIN RAIL - MOBIL OPTIMIERT */}
+      {/* MAIN RAIL */}
       <main
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setHoveredId(null)}
@@ -157,12 +167,12 @@ export default function App() {
 
         {filteredAnime.length === 0 && (
           <div className="text-center w-full text-gray-500 py-20 text-lg">
-            No Anime Found 😢
+            No Anime Found
           </div>
         )}
       </main>
 
-      {/* DETAIL VIEW - FULL RESPONSIVE */}
+      {/* DETAIL VIEW - ALL ENGLISH */}
       {selectedAnime && (
         <>
           <div 
@@ -182,7 +192,7 @@ export default function App() {
               </button>
 
               <div className="p-6 md:p-8">
-                {/* Titel */}
+                {/* Title */}
                 <h2 className="text-2xl md:text-4xl font-black text-yellow-400 mb-4 md:mb-6 drop-shadow-lg text-center md:text-left">
                   {selectedAnime.title}
                 </h2>
@@ -197,7 +207,7 @@ export default function App() {
                     />
                   </div>
 
-                  {/* Info + Kommentar */}
+                  {/* Info + Comment */}
                   <div className="order-1 lg:order-2 flex flex-col">
                     {/* Description */}
                     <p className="text-sm md:text-base text-gray-200 leading-relaxed mb-6 flex-1">
@@ -216,21 +226,23 @@ export default function App() {
                       ))}
                     </div>
 
-                    {/* KOMMENTAR */}
+                    {/* COMMENT SECTION */}
                     <div className="border-t border-yellow-500/30 pt-6 mb-8">
                       <div className="flex items-start gap-3">
                         <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center font-bold text-black text-sm md:text-lg flex-shrink-0 mt-1">
                           ME
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="text-xs md:text-sm font-semibold text-yellow-300 mb-3">Mein Kommentar:</h4>
+                          <h4 className="text-xs md:text-sm font-semibold text-yellow-300 mb-3">
+                            My Comment:
+                          </h4>
                           {selectedAnime.category === 'must watch' ? (
                             <p className="text-lg md:text-xl font-black bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 bg-clip-text text-transparent drop-shadow-lg">
                               🔥 JUST PEAK CINEMA 🔥
                             </p>
                           ) : (
                             <div className="text-base md:text-lg text-gray-100 italic bg-gray-900/70 px-4 md:px-6 py-3 md:py-4 rounded-xl border border-gray-700/60 backdrop-blur-sm">
-                              {selectedAnime.comment || 'Noch keine Notizen...'}
+                              {selectedAnime.comment || 'No notes yet...'}
                             </div>
                           )}
                         </div>
@@ -251,7 +263,7 @@ export default function App() {
                         onClick={() => setSelectedAnime(null)}
                         className="px-6 py-3 border-2 border-yellow-500 text-yellow-400 font-semibold text-sm md:text-base rounded-xl hover:bg-yellow-500/20 transition-all flex-1"
                       >
-                        Zurück zur Liste
+                        Back to List
                       </button>
                     </div>
                   </div>
