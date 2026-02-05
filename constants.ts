@@ -103,7 +103,7 @@ export const ANIME_LIST: Anime[] = [
     category: Category.MUST_WATCH,
     genres: ['Action', 'Adventure', 'Historical'],
     description: 'A Viking epic centered on revenge, war, and the search for a land without conflict.',
-    coverImageURL: 'https://static.wikia.nocookie.net/vinlandsaga/images/7/7b/Vinland_Saga_S2_Key_Visual_2.png/revision/latest?cb=20220608122056',
+    coverImageURL: 'https://cdn.myanimelist.net/images/anime/1500/103005.jpg',
     releaseYear: 2019,
     status: 'Ongoing',
     trailerUrl: 'https://www.youtube.com/watch?v=f8Tf89A96U0'
