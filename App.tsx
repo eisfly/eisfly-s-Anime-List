@@ -1,43 +1,22 @@
 import React, { useState, useMemo, useRef, useEffect, useCallback, memo } from 'react';
 import { ANIME_LIST, CATEGORIES } from './constants';
-import { Anime } from './types';
+import { Anime, Category } from './types';
 
 /* =========================
    THEMED SCROLLBAR + SEARCH + SELECT CSS
 ========================= */
 const ThemedStyles = () => (
   <style>{`
-    /* ===== Scrollbars ===== */
-    .themed-scrollbar {
-      scrollbar-width: thin;
-      scrollbar-color: rgba(234,179,8,0.55) rgba(234,179,8,0.10);
-    }
+    .themed-scrollbar { scrollbar-width: thin; scrollbar-color: rgba(234,179,8,0.55) rgba(234,179,8,0.10); }
     .themed-scrollbar::-webkit-scrollbar { width: 10px; height: 10px; }
-    .themed-scrollbar::-webkit-scrollbar-track {
-      background: rgba(234,179,8,0.10);
-      border-radius: 999px;
-    }
-    .themed-scrollbar::-webkit-scrollbar-thumb {
-      background: rgba(234,179,8,0.40);
-      border-radius: 999px;
-      border: 2px solid rgba(0,0,0,0.60);
-    }
+    .themed-scrollbar::-webkit-scrollbar-track { background: rgba(234,179,8,0.10); border-radius: 999px; }
+    .themed-scrollbar::-webkit-scrollbar-thumb { background: rgba(234,179,8,0.40); border-radius: 999px; border: 2px solid rgba(0,0,0,0.60); }
     .themed-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(234,179,8,0.62); }
 
-    .themed-scrollbar-sm {
-      scrollbar-width: thin;
-      scrollbar-color: rgba(234,179,8,0.48) rgba(234,179,8,0.08);
-    }
+    .themed-scrollbar-sm { scrollbar-width: thin; scrollbar-color: rgba(234,179,8,0.48) rgba(234,179,8,0.08); }
     .themed-scrollbar-sm::-webkit-scrollbar { width: 8px; height: 8px; }
-    .themed-scrollbar-sm::-webkit-scrollbar-track {
-      background: rgba(234,179,8,0.08);
-      border-radius: 999px;
-    }
-    .themed-scrollbar-sm::-webkit-scrollbar-thumb {
-      background: rgba(234,179,8,0.34);
-      border-radius: 999px;
-      border: 2px solid rgba(0,0,0,0.65);
-    }
+    .themed-scrollbar-sm::-webkit-scrollbar-track { background: rgba(234,179,8,0.08); border-radius: 999px; }
+    .themed-scrollbar-sm::-webkit-scrollbar-thumb { background: rgba(234,179,8,0.34); border-radius: 999px; border: 2px solid rgba(0,0,0,0.65); }
     .themed-scrollbar-sm::-webkit-scrollbar-thumb:hover { background: rgba(234,179,8,0.55); }
 
     .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -46,11 +25,8 @@ const ThemedStyles = () => (
     .scroll-snap-align-center { scroll-snap-align: center; }
     .kinetic-rail { scroll-snap-type: x mandatory; scroll-behavior: smooth; }
 
-    /* ===== Themed Search ===== */
     .search-shell {
-      position: relative;
-      border-radius: 18px;
-      padding: 1px;
+      position: relative; border-radius: 18px; padding: 1px;
       background: radial-gradient(120% 120% at 20% 0%, rgba(234,179,8,0.35), transparent 55%),
                   linear-gradient(90deg, rgba(234,179,8,0.30), rgba(234,179,8,0.06), rgba(234,179,8,0.30));
       box-shadow: 0 18px 60px rgba(0,0,0,0.45);
@@ -59,38 +35,20 @@ const ThemedStyles = () => (
       border-radius: 17px;
       background: linear-gradient(180deg, rgba(0,0,0,0.40), rgba(0,0,0,0.20));
       border: 1px solid rgba(255,255,255,0.06);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
     }
-    .search-input {
-      width: 100%;
-      outline: none;
-      background: transparent;
-      color: rgba(255,255,255,0.88);
-    }
-    .search-input::placeholder {
-      color: rgba(234,179,8,0.28);
-      letter-spacing: 0.10em;
-    }
+    .search-input { width: 100%; outline: none; background: transparent; color: rgba(255,255,255,0.88); }
+    .search-input::placeholder { color: rgba(234,179,8,0.28); letter-spacing: 0.10em; }
     .search-shell:focus-within {
       background: radial-gradient(120% 120% at 20% 0%, rgba(234,179,8,0.50), transparent 55%),
                   linear-gradient(90deg, rgba(234,179,8,0.55), rgba(234,179,8,0.10), rgba(234,179,8,0.55));
       box-shadow: 0 22px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(234,179,8,0.20), 0 0 40px rgba(234,179,8,0.18);
     }
-    .search-shell:focus-within .search-inner {
-      border-color: rgba(234,179,8,0.22);
-    }
-    .search-kbd {
-      border: 1px solid rgba(234,179,8,0.18);
-      background: rgba(234,179,8,0.08);
-      color: rgba(234,179,8,0.75);
-    }
+    .search-shell:focus-within .search-inner { border-color: rgba(234,179,8,0.22); }
+    .search-kbd { border: 1px solid rgba(234,179,8,0.18); background: rgba(234,179,8,0.08); color: rgba(234,179,8,0.75); }
 
-    /* ===== Themed Select (Genre Filter) ===== */
     .select-shell {
-      position: relative;
-      border-radius: 18px;
-      padding: 1px;
+      position: relative; border-radius: 18px; padding: 1px;
       background: radial-gradient(120% 120% at 20% 0%, rgba(234,179,8,0.28), transparent 55%),
                   linear-gradient(90deg, rgba(234,179,8,0.26), rgba(234,179,8,0.05), rgba(234,179,8,0.26));
       box-shadow: 0 18px 60px rgba(0,0,0,0.35);
@@ -99,22 +57,13 @@ const ThemedStyles = () => (
       border-radius: 17px;
       background: linear-gradient(180deg, rgba(0,0,0,0.38), rgba(0,0,0,0.18));
       border: 1px solid rgba(255,255,255,0.06);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
     }
     .genre-select {
-      width: 100%;
-      outline: none;
-      background: transparent;
-      color: rgba(255,255,255,0.88);
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
+      width: 100%; outline: none; background: transparent; color: rgba(255,255,255,0.88);
+      appearance: none; -webkit-appearance: none; -moz-appearance: none;
     }
-    .genre-select option {
-      background: #0a0a0a;
-      color: rgba(255,255,255,0.9);
-    }
+    .genre-select option { background: #0a0a0a; color: rgba(255,255,255,0.9); }
   `}</style>
 );
 
@@ -192,8 +141,7 @@ const AnimeCard = memo(
       onClick={onClick}
       className={`
         kinetic-card relative h-[50vh] md:h-[46vh] flex-shrink-0 cursor-none overflow-hidden
-        border border-yellow-500/10 transition-all duration-700
-        rounded-3xl
+        border border-yellow-500/10 transition-all duration-700 rounded-3xl
         ${isHovered
           ? 'w-[86vw] md:w-[440px] mx-1.5 md:mx-3 z-20 shadow-[0_0_60px_rgba(0,0,0,0.85)] brightness-100 grayscale-0'
           : 'w-[128px] md:w-[160px] mx-1 grayscale brightness-[0.42] hover:brightness-[0.65]'}
@@ -218,46 +166,26 @@ const AnimeCard = memo(
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(234,179,8,0.18),transparent_55%)] opacity-70" />
       </div>
 
-      <div
-        className={`absolute inset-0 rounded-3xl ring-1 ring-yellow-500/10 transition-all duration-500 ${
-          isHovered ? 'ring-yellow-500/25' : ''
-        }`}
-      />
+      <div className={`absolute inset-0 rounded-3xl ring-1 ring-yellow-500/10 transition-all duration-500 ${isHovered ? 'ring-yellow-500/25' : ''}`} />
 
-      <div
-        className={`absolute bottom-0 left-0 w-full px-5 pb-5 pt-10 transition-all duration-300 pointer-events-none ${
-          isHovered ? 'opacity-0 translate-y-6' : 'opacity-100 translate-y-0'
-        }`}
-      >
+      <div className={`absolute bottom-0 left-0 w-full px-5 pb-5 pt-10 transition-all duration-300 pointer-events-none ${isHovered ? 'opacity-0 translate-y-6' : 'opacity-100 translate-y-0'}`}>
         <h3 className="text-xs md:text-sm font-extrabold tracking-wide text-yellow-500/55 line-clamp-2">
           {anime.title}
         </h3>
       </div>
 
-      <div
-        className={`absolute inset-0 flex flex-col justify-end p-6 md:p-7 transition-all duration-500 pointer-events-none ${
-          isHovered ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
-        }`}
-      >
+      <div className={`absolute inset-0 flex flex-col justify-end p-6 md:p-7 transition-all duration-500 pointer-events-none ${isHovered ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
         <div className="space-y-3">
           <div className="flex flex-wrap gap-2">
             {anime.genres.slice(0, 2).map((g) => (
-              <span
-                key={g}
-                className="text-[10px] md:text-[11px] px-2.5 py-1 rounded-full border border-yellow-500/18 bg-black/35 text-yellow-100/90 font-semibold tracking-wide"
-              >
+              <span key={g} className="text-[10px] md:text-[11px] px-2.5 py-1 rounded-full border border-yellow-500/18 bg-black/35 text-yellow-100/90 font-semibold tracking-wide">
                 {g}
               </span>
             ))}
           </div>
 
-          <h2 className="text-xl md:text-2xl font-black leading-tight tracking-tight text-white line-clamp-2">
-            {anime.title}
-          </h2>
-
-          <p className="text-[11px] md:text-[12px] text-gray-200/70 max-w-xs leading-relaxed line-clamp-2">
-            {anime.description}
-          </p>
+          <h2 className="text-xl md:text-2xl font-black leading-tight tracking-tight text-white line-clamp-2">{anime.title}</h2>
+          <p className="text-[11px] md:text-[12px] text-gray-200/70 max-w-xs leading-relaxed line-clamp-2">{anime.description}</p>
 
           <div className="flex items-center gap-3 text-[10px] font-bold tracking-wider text-yellow-400/80 uppercase">
             <span className="text-white/60">{anime.releaseYear}</span>
@@ -278,53 +206,40 @@ export default function App() {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [isChanging, setIsChanging] = useState(false);
 
-  const MY_COMMENT_PLACEHOLDER =
-    '📝 My Comment: (hier kommt später dein Kommentar rein — z.B. warum der Anime ein GOAT ist)';
-
   const railRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
   const getAnimeKey = useCallback((a: Anime) => String(a.id), []);
+  const GOOD_ANIME_KEY = Category.GOOD; // "Good Anime"
 
-  // ✅ Good-Key finden
-  const GOOD_KEY = useMemo(() => {
-    const exact = CATEGORIES.find((c) => c === 'Good');
-    if (exact) return exact;
-    const lower = CATEGORIES.find((c) => c.toLowerCase() === 'good');
-    if (lower) return lower;
-    const alt = CATEGORIES.find((c) => c.toLowerCase().includes('good'));
-    return alt ?? 'Good';
-  }, []);
-
-  // ✅ Charlotte MUSS in "Good" (nicht Peak/Goat)
+  // ✅ Charlotte IMMER "Good Anime" (und ersetzt alte Charlotte aus Peak/Goat/etc)
   const CHARLOTTE: Anime = useMemo(
-    () =>
-      ({
-        id: 'charlotte',
-        title: 'Charlotte',
-        description:
-          'A boy discovers his supernatural ability—and gets pulled into a secret war between gifted teenagers. Emotional, weird, and worth the ride.',
-        coverImageURL:
-          'https://images.unsplash.com/photo-1541963463532-d68292c34b19?auto=format&fit=crop&w=1200&q=60',
-        genres: ['Drama', 'Supernatural', 'School', 'Comedy'],
-        releaseYear: 2015,
-        status: 'Finished',
-        category: GOOD_KEY,
-      } as Anime),
-    [GOOD_KEY]
+    () => ({
+      id: 'charlotte',
+      title: 'Charlotte',
+      category: GOOD_ANIME_KEY,
+      genres: ['Drama', 'Supernatural', 'School', 'Comedy'],
+      description:
+        'A boy discovers his supernatural ability—and gets pulled into a secret war between gifted teenagers. Emotional, weird, and worth the ride.',
+      coverImageURL:
+        'https://images.unsplash.com/photo-1541963463532-d68292c34b19?auto=format&fit=crop&w=1200&q=60',
+      releaseYear: 2015,
+      status: 'Finished',
+    }),
+    [GOOD_ANIME_KEY]
   );
 
-  // ✅ Charlotte: vorhandene entfernen (egal ob Peak/Goat/sonstwas), dann Good-Version hinzufügen
   const LIST_WITH_FIXED_CHARLOTTE: Anime[] = useMemo(() => {
     const isCharlotte = (a: Anime) => {
       const t = (a.title ?? '').trim().toLowerCase();
       const id = String(a.id ?? '').trim().toLowerCase();
       return t === 'charlotte' || id === 'charlotte';
     };
+
     const baseWithoutCharlotte = ANIME_LIST.filter((a) => !isCharlotte(a));
     return [...baseWithoutCharlotte, CHARLOTTE];
   }, [CHARLOTTE]);
 
-  // ✅ Genres aus kompletter Liste (inkl Charlotte)
   const ALL_GENRES = useMemo(() => {
     const set = new Set<string>();
     LIST_WITH_FIXED_CHARLOTTE.forEach((a) => a.genres.forEach((g) => set.add(g)));
@@ -338,6 +253,7 @@ export default function App() {
 
   const filteredAnime = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
+
     return LIST_WITH_FIXED_CHARLOTTE.filter((a) => {
       const matchCat = selectedCategory === 'All' || a.category === selectedCategory;
       const matchSearch = q === '' || a.title.toLowerCase().includes(q);
@@ -648,7 +564,7 @@ export default function App() {
             <div className="themed-scrollbar flex-1 p-6 md:p-10 lg:p-12 overflow-y-auto">
               <div className="rounded-2xl border border-yellow-500/15 bg-yellow-500/8 px-4 py-3 mb-5">
                 <p className="text-[12px] md:text-[13px] font-semibold text-yellow-200/90">
-                  {MY_COMMENT_PLACEHOLDER}
+                  📝 My Comment: (hier kommt später dein Kommentar rein)
                 </p>
               </div>
 
@@ -666,14 +582,7 @@ export default function App() {
                     {selectedAnime.genres.map((g) => (
                       <span
                         key={g}
-                        className="
-                          px-3.5 py-1.5 rounded-full
-                          border border-yellow-500/18
-                          bg-yellow-500/10
-                          text-[12px] font-semibold text-yellow-100/90
-                          hover:bg-yellow-500/18
-                          transition-all duration-200
-                        "
+                        className="px-3.5 py-1.5 rounded-full border border-yellow-500/18 bg-yellow-500/10 text-[12px] font-semibold text-yellow-100/90 hover:bg-yellow-500/18 transition-all duration-200"
                       >
                         {g}
                       </span>
@@ -695,37 +604,21 @@ export default function App() {
 
               <div className="rounded-2xl border border-white/10 bg-black/25 p-4 md:p-6 mb-7">
                 <p className="text-sm font-semibold text-white/70 mb-2">Description</p>
-                <p className="text-sm md:text-base text-white/70 leading-relaxed">
-                  “{selectedAnime.description}”
-                </p>
+                <p className="text-sm md:text-base text-white/70 leading-relaxed">“{selectedAnime.description}”</p>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
-                  className="
-                    flex-1 rounded-2xl py-3.5 px-6
-                    bg-yellow-500 text-black font-black text-sm
-                    hover:bg-yellow-400 transition-all duration-200
-                    shadow-[0_12px_40px_rgba(234,179,8,0.18)]
-                  "
+                  className="flex-1 rounded-2xl py-3.5 px-6 bg-yellow-500 text-black font-black text-sm hover:bg-yellow-400 transition-all duration-200 shadow-[0_12px_40px_rgba(234,179,8,0.18)]"
                   onClick={() =>
-                    window.open(
-                      `https://myanimelist.net/search/all?q=${encodeURIComponent(selectedAnime.title)}`,
-                      '_blank',
-                      'noopener,noreferrer'
-                    )
+                    window.open(`https://myanimelist.net/search/all?q=${encodeURIComponent(selectedAnime.title)}`, '_blank', 'noopener,noreferrer')
                   }
                 >
                   Explore
                 </button>
 
                 <button
-                  className="
-                    flex-1 rounded-2xl py-3.5 px-6
-                    border border-yellow-500/35 bg-white/5 text-yellow-200 font-black text-sm
-                    hover:bg-yellow-500 hover:text-black hover:border-yellow-400/30
-                    transition-all duration-200
-                  "
+                  className="flex-1 rounded-2xl py-3.5 px-6 border border-yellow-500/35 bg-white/5 text-yellow-200 font-black text-sm hover:bg-yellow-500 hover:text-black hover:border-yellow-400/30 transition-all duration-200"
                   onClick={() => openExternalTrailer(selectedAnime)}
                 >
                   Trailer
