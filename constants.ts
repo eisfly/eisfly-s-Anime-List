@@ -1,3 +1,20 @@
+import { Category, type Anime } from './types';
+
+export const CATEGORIES: string[] = [
+  'All',
+  Category.MUST_WATCH,
+  Category.GOATS,
+  Category.PEAK,
+  Category.GOOD,
+  Category.NOTHING_ELSE,
+  Category.SPORTS,
+  Category.UNDERRATED,
+  Category.UNKNOWN,
+];
+
+// ⛔️ Hier musst du deine echte Liste wieder einsetzen.
+// Ich lasse dir ein Beispiel-Format drin:
+export const ANIME_LIST: Anime[] = [
 import React, { useState, useMemo, useRef, useEffect, useCallback, memo } from 'react';
 import { ANIME_LIST, CATEGORIES } from './constants';
 import { Anime } from './types';
@@ -186,90 +203,88 @@ const AnimeCard = memo(
     isHovered: boolean;
     onClick: () => void;
     cardRef: React.Ref<HTMLDivElement>;
-  }) => {
-    return (
-      <div
-        ref={cardRef}
-        onClick={onClick}
-        className={`
-          kinetic-card relative h-[50vh] md:h-[46vh] flex-shrink-0 cursor-none overflow-hidden
-          border border-yellow-500/10 transition-all duration-700
-          rounded-3xl
-          ${isHovered
-            ? 'w-[86vw] md:w-[440px] mx-1.5 md:mx-3 z-20 shadow-[0_0_60px_rgba(0,0,0,0.85)] brightness-100 grayscale-0'
-            : 'w-[128px] md:w-[160px] mx-1 grayscale brightness-[0.42] hover:brightness-[0.65]'}
-        `}
-      >
-        <div className="absolute inset-0 pointer-events-none">
-          <img
-            src={anime.coverImageURL}
-            alt={anime.title}
-            loading="lazy"
-            decoding="async"
-            draggable={false}
-            className={`w-full h-full object-cover object-top transition-transform duration-[1200ms] ${
-              isHovered ? 'scale-[1.07]' : 'scale-100'
-            }`}
-          />
-          <div
-            className={`absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent transition-opacity duration-500 ${
-              isHovered ? 'opacity-95' : 'opacity-75'
-            }`}
-          />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(234,179,8,0.18),transparent_55%)] opacity-70" />
-        </div>
-
-        <div
-          className={`absolute inset-0 rounded-3xl ring-1 ring-yellow-500/10 transition-all duration-500 ${
-            isHovered ? 'ring-yellow-500/25' : ''
+  }) => (
+    <div
+      ref={cardRef}
+      onClick={onClick}
+      className={`
+        kinetic-card relative h-[50vh] md:h-[46vh] flex-shrink-0 cursor-none overflow-hidden
+        border border-yellow-500/10 transition-all duration-700
+        rounded-3xl
+        ${isHovered
+          ? 'w-[86vw] md:w-[440px] mx-1.5 md:mx-3 z-20 shadow-[0_0_60px_rgba(0,0,0,0.85)] brightness-100 grayscale-0'
+          : 'w-[128px] md:w-[160px] mx-1 grayscale brightness-[0.42] hover:brightness-[0.65]'}
+      `}
+    >
+      <div className="absolute inset-0 pointer-events-none">
+        <img
+          src={anime.coverImageURL}
+          alt={anime.title}
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+          className={`w-full h-full object-cover object-top transition-transform duration-[1200ms] ${
+            isHovered ? 'scale-[1.07]' : 'scale-100'
           }`}
         />
-
         <div
-          className={`absolute bottom-0 left-0 w-full px-5 pb-5 pt-10 transition-all duration-300 pointer-events-none ${
-            isHovered ? 'opacity-0 translate-y-6' : 'opacity-100 translate-y-0'
+          className={`absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent transition-opacity duration-500 ${
+            isHovered ? 'opacity-95' : 'opacity-75'
           }`}
-        >
-          <h3 className="text-xs md:text-sm font-extrabold tracking-wide text-yellow-500/55 line-clamp-2">
+        />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(234,179,8,0.18),transparent_55%)] opacity-70" />
+      </div>
+
+      <div
+        className={`absolute inset-0 rounded-3xl ring-1 ring-yellow-500/10 transition-all duration-500 ${
+          isHovered ? 'ring-yellow-500/25' : ''
+        }`}
+      />
+
+      <div
+        className={`absolute bottom-0 left-0 w-full px-5 pb-5 pt-10 transition-all duration-300 pointer-events-none ${
+          isHovered ? 'opacity-0 translate-y-6' : 'opacity-100 translate-y-0'
+        }`}
+      >
+        <h3 className="text-xs md:text-sm font-extrabold tracking-wide text-yellow-500/55 line-clamp-2">
+          {anime.title}
+        </h3>
+      </div>
+
+      <div
+        className={`absolute inset-0 flex flex-col justify-end p-6 md:p-7 transition-all duration-500 pointer-events-none ${
+          isHovered ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+        }`}
+      >
+        <div className="space-y-3">
+          <div className="flex flex-wrap gap-2">
+            {anime.genres.slice(0, 2).map((g) => (
+              <span
+                key={g}
+                className="text-[10px] md:text-[11px] px-2.5 py-1 rounded-full border border-yellow-500/18 bg-black/35 text-yellow-100/90 font-semibold tracking-wide"
+              >
+                {g}
+              </span>
+            ))}
+          </div>
+
+          <h2 className="text-xl md:text-2xl font-black leading-tight tracking-tight text-white line-clamp-2">
             {anime.title}
-          </h3>
-        </div>
+          </h2>
 
-        <div
-          className={`absolute inset-0 flex flex-col justify-end p-6 md:p-7 transition-all duration-500 pointer-events-none ${
-            isHovered ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
-          }`}
-        >
-          <div className="space-y-3">
-            <div className="flex flex-wrap gap-2">
-              {anime.genres.slice(0, 2).map((g) => (
-                <span
-                  key={g}
-                  className="text-[10px] md:text-[11px] px-2.5 py-1 rounded-full border border-yellow-500/18 bg-black/35 text-yellow-100/90 font-semibold tracking-wide"
-                >
-                  {g}
-                </span>
-              ))}
-            </div>
+          <p className="text-[11px] md:text-[12px] text-gray-200/70 max-w-xs leading-relaxed line-clamp-2">
+            {anime.description}
+          </p>
 
-            <h2 className="text-xl md:text-2xl font-black leading-tight tracking-tight text-white line-clamp-2">
-              {anime.title}
-            </h2>
-
-            <p className="text-[11px] md:text-[12px] text-gray-200/70 max-w-xs leading-relaxed line-clamp-2">
-              {anime.description}
-            </p>
-
-            <div className="flex items-center gap-3 text-[10px] font-bold tracking-wider text-yellow-400/80 uppercase">
-              <span className="text-white/60">{anime.releaseYear}</span>
-              <div className="w-1.5 h-1.5 bg-yellow-500/50 rounded-sm rotate-45" />
-              <span className="text-white/60">{anime.status}</span>
-            </div>
+          <div className="flex items-center gap-3 text-[10px] font-bold tracking-wider text-yellow-400/80 uppercase">
+            <span className="text-white/60">{anime.releaseYear}</span>
+            <div className="w-1.5 h-1.5 bg-yellow-500/50 rounded-sm rotate-45" />
+            <span className="text-white/60">{anime.status}</span>
           </div>
         </div>
       </div>
-    );
-  }
+    </div>
+  )
 );
 
 export default function App() {
@@ -285,23 +300,19 @@ export default function App() {
 
   const railRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
-
   const getAnimeKey = useCallback((a: Anime) => String(a.id), []);
 
-  // ✅ "Good" Kategorie-Key aus deinen CATEGORIES sauber finden
+  // ✅ Good-Key finden
   const GOOD_KEY = useMemo(() => {
     const exact = CATEGORIES.find((c) => c === 'Good');
     if (exact) return exact;
-
     const lower = CATEGORIES.find((c) => c.toLowerCase() === 'good');
     if (lower) return lower;
-
-    // fallback: irgendwas das "good" enthält
     const alt = CATEGORIES.find((c) => c.toLowerCase().includes('good'));
     return alt ?? 'Good';
   }, []);
 
-  // ✅ Charlotte MUSS in "Good" liegen (und NICHT Peak/Goat)
+  // ✅ Charlotte MUSS in "Good" (nicht Peak/Goat)
   const CHARLOTTE: Anime = useMemo(
     () =>
       ({
@@ -310,7 +321,7 @@ export default function App() {
         description:
           'A boy discovers his supernatural ability—and gets pulled into a secret war between gifted teenagers. Emotional, weird, and worth the ride.',
         coverImageURL:
-          'https://images.unsplash.com/photo-1541963463532-d68292c34b19?auto=format&fit=crop&w=1200&q=60', // Placeholder
+          'https://images.unsplash.com/photo-1541963463532-d68292c34b19?auto=format&fit=crop&w=1200&q=60',
         genres: ['Drama', 'Supernatural', 'School', 'Comedy'],
         releaseYear: 2015,
         status: 'Finished',
@@ -319,38 +330,31 @@ export default function App() {
     [GOOD_KEY]
   );
 
-  // ✅ WICHTIG:
-  // - Wenn Charlotte schon in ANIME_LIST existiert (z.B. Peak/Goat), wird sie entfernt
-  // - Dann wird unsere Charlotte (category=Good) hinzugefügt
-  // => Ergebnis: Charlotte ist wie jeder andere Anime in "Good" + auch in "All"
+  // ✅ Charlotte: vorhandene entfernen (egal ob Peak/Goat/sonstwas), dann Good-Version hinzufügen
   const LIST_WITH_FIXED_CHARLOTTE: Anime[] = useMemo(() => {
     const isCharlotte = (a: Anime) => {
       const t = (a.title ?? '').trim().toLowerCase();
       const id = String(a.id ?? '').trim().toLowerCase();
       return t === 'charlotte' || id === 'charlotte';
     };
-
     const baseWithoutCharlotte = ANIME_LIST.filter((a) => !isCharlotte(a));
     return [...baseWithoutCharlotte, CHARLOTTE];
   }, [CHARLOTTE]);
 
-  // ✅ Genres aus der kompletten (finalen) Liste -> Genre-Filter greift auch für Charlotte
+  // ✅ Genres aus kompletter Liste (inkl Charlotte)
   const ALL_GENRES = useMemo(() => {
     const set = new Set<string>();
     LIST_WITH_FIXED_CHARLOTTE.forEach((a) => a.genres.forEach((g) => set.add(g)));
     return ['All', ...Array.from(set).sort((a, b) => a.localeCompare(b))];
   }, [LIST_WITH_FIXED_CHARLOTTE]);
 
-  // ✅ Wenn Genre nicht mehr existiert -> reset
   useEffect(() => {
     if (selectedGenre === 'All') return;
     if (!ALL_GENRES.includes(selectedGenre)) setSelectedGenre('All');
   }, [ALL_GENRES, selectedGenre]);
 
-  // ✅ Final Filter: Category + Search + Genre (Genre filtert auch Charlotte)
   const filteredAnime = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-
     return LIST_WITH_FIXED_CHARLOTTE.filter((a) => {
       const matchCat = selectedCategory === 'All' || a.category === selectedCategory;
       const matchSearch = q === '' || a.title.toLowerCase().includes(q);
@@ -382,7 +386,6 @@ export default function App() {
     if (window.innerWidth >= 768) setHoveredId(null);
   }, []);
 
-  // ✅ Mobile observer: nach render starten
   useEffect(() => {
     if (window.innerWidth >= 768) return;
 
@@ -437,7 +440,6 @@ export default function App() {
 
   const closeFocus = useCallback(() => setSelectedAnime(null), []);
 
-  // ✅ Trailer Button bleibt (keine trailerUrl nötig)
   const openExternalTrailer = (anime: Anime) => {
     const query = encodeURIComponent(anime.title + ' official trailer anime');
     window.open(`https://www.youtube.com/results?search_query=${query}`, '_blank', 'noopener,noreferrer');
@@ -480,7 +482,6 @@ export default function App() {
           <div className="bg-black/55 backdrop-blur-xl border border-yellow-500/12 rounded-3xl shadow-[0_20px_80px_rgba(0,0,0,0.55)]">
             <div className="px-4 md:px-6 py-4 md:py-5">
               <div className="grid grid-cols-1 lg:grid-cols-[auto,1fr,260px,360px] gap-4 md:gap-5 items-center">
-                {/* Brand */}
                 <div className="min-w-0">
                   <h1 className="text-base md:text-lg font-black tracking-tight text-yellow-400 whitespace-nowrap">
                     EISFLY´S ARCHIVE
@@ -490,7 +491,6 @@ export default function App() {
                   </p>
                 </div>
 
-                {/* Category Filters */}
                 <div className="w-full min-w-0">
                   <div className="themed-scrollbar-sm overflow-x-auto px-1 py-1">
                     <div className="flex gap-2.5 md:gap-3.5 min-w-max">
@@ -517,7 +517,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Genre Filter */}
                 <div className="w-full lg:w-[260px] min-w-0">
                   <div className="select-shell">
                     <div className="select-inner flex items-center gap-3 px-3 py-2.5">
@@ -543,7 +542,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Search */}
                 <div className="w-full lg:w-[360px] min-w-0">
                   <div className="search-shell">
                     <div className="search-inner flex items-center gap-3 px-3 py-2.5">
@@ -575,7 +573,6 @@ export default function App() {
         </div>
       </header>
 
-      {/* RAIL */}
       {!selectedAnime && (
         <main
           ref={railRef}
@@ -621,7 +618,6 @@ export default function App() {
         </main>
       )}
 
-      {/* MODAL */}
       {selectedAnime && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-0 md:p-8 lg:p-14">
           <div className="absolute inset-0 bg-black/85" onClick={closeFocus} aria-hidden="true" />
@@ -639,7 +635,6 @@ export default function App() {
             role="dialog"
             aria-modal="true"
           >
-            {/* Left Cover */}
             <div className="lg:w-[42%] h-[40%] lg:h-full relative overflow-hidden">
               <img
                 src={selectedAnime.coverImageURL}
@@ -667,7 +662,6 @@ export default function App() {
               </button>
             </div>
 
-            {/* Right Content */}
             <div className="themed-scrollbar flex-1 p-6 md:p-10 lg:p-12 overflow-y-auto">
               <div className="rounded-2xl border border-yellow-500/15 bg-yellow-500/8 px-4 py-3 mb-5">
                 <p className="text-[12px] md:text-[13px] font-semibold text-yellow-200/90">
@@ -723,7 +717,6 @@ export default function App() {
                 </p>
               </div>
 
-              {/* Buttons (Trailer bleibt drin) */}
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   className="
@@ -760,7 +753,6 @@ export default function App() {
         </div>
       )}
 
-      {/* FOOTER */}
       <footer className="fixed bottom-0 left-0 right-0 p-4 md:p-10 flex justify-between items-end pointer-events-none z-40">
         <div />
         <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-white/10 bg-black/35 backdrop-blur-xl px-4 py-2">
@@ -782,3 +774,5 @@ export default function App() {
     </div>
   );
 }
+
+];
