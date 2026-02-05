@@ -50,7 +50,7 @@ const ThemedStyles = () => (
     .search-shell {
       position: relative;
       border-radius: 18px;
-      padding: 1px; /* gradient border thickness */
+      padding: 1px;
       background: radial-gradient(120% 120% at 20% 0%, rgba(234,179,8,0.35), transparent 55%),
                   linear-gradient(90deg, rgba(234,179,8,0.30), rgba(234,179,8,0.06), rgba(234,179,8,0.30));
       box-shadow: 0 18px 60px rgba(0,0,0,0.45);
@@ -249,6 +249,10 @@ export default function App() {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [isChanging, setIsChanging] = useState(false);
 
+  // 👇 Platzhalter für "My Comment" (später machst du es dynamisch)
+  const MY_COMMENT_PLACEHOLDER =
+    '📝 My Comment: (hier kommt später dein Kommentar rein — z.B. warum der Anime ein GOAT ist)';
+
   const railRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
@@ -405,11 +409,10 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Search (now fully themed) */}
+                {/* Search */}
                 <div className="w-full lg:w-[360px] min-w-0">
                   <div className="search-shell">
                     <div className="search-inner flex items-center gap-3 px-3 py-2.5">
-                      {/* icon */}
                       <div className="w-9 h-9 rounded-xl bg-yellow-500/10 border border-yellow-500/15 flex items-center justify-center text-yellow-300 shadow-[0_0_18px_rgba(234,179,8,0.12)]">
                         ⌕
                       </div>
@@ -422,14 +425,12 @@ export default function App() {
                         className="search-input text-[14px] md:text-[14px] font-semibold tracking-wide"
                       />
 
-                      {/* hint badge (desktop only) */}
                       <div className="hidden lg:flex items-center gap-2">
                         <span className="search-kbd text-[11px] font-bold rounded-lg px-2 py-1">Enter</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* subtle helper line */}
                   <p className="mt-2 text-[11px] text-white/28 hidden md:block">
                     Tip: type a title to filter instantly ✨
                   </p>
@@ -531,9 +532,11 @@ export default function App() {
 
             {/* Right Content */}
             <div className="themed-scrollbar flex-1 p-6 md:p-10 lg:p-12 overflow-y-auto">
-              <div className="flex items-center gap-3 mb-5 text-yellow-400/50">
-                <span className="text-[11px] font-semibold tracking-wider">ENTRY #{selectedAnime.id}</span>
-                <div className="h-px flex-1 bg-yellow-500/10" />
+              {/* ✅ Statt "mw-1" / Abkürzung: My Comment Placeholder */}
+              <div className="rounded-2xl border border-yellow-500/15 bg-yellow-500/8 px-4 py-3 mb-5">
+                <p className="text-[12px] md:text-[13px] font-semibold text-yellow-200/90">
+                  {MY_COMMENT_PLACEHOLDER}
+                </p>
               </div>
 
               <h2 className="text-2xl md:text-4xl lg:text-5xl font-black tracking-tight text-white mb-4">
