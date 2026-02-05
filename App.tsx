@@ -5,7 +5,6 @@ import { Anime, Category } from './types';
 /* =========================
    THEMED SCROLLBAR + SEARCH + SELECT CSS
 ========================= */
-const ThemedStyles = () => (
   <style>{`
     .themed-scrollbar { scrollbar-width: thin; scrollbar-color: rgba(234,179,8,0.55) rgba(234,179,8,0.10); }
     .themed-scrollbar::-webkit-scrollbar { width: 10px; height: 10px; }
