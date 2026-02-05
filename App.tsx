@@ -1,52 +1,45 @@
-import React, { useState, useMemo, useRef, useCallback, memo, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useCallback, memo } from 'react';
 import { ANIME_LIST, CATEGORIES } from './constants';
 import { Anime } from './types';
 
-/* ========== SMOOTH CURSOR - LAG FREE IN DETAIL VIEW ========== */
+/* ========== ULTRA SMOOTH CURSOR ========== */
 const Cursor = () => {
   const cursorRef = useRef<HTMLDivElement>(null);
-  const mousePos = useRef({ x: 0, y: 0 });
-  const cursorPos = useRef({ x: 0, y: 0 });
-  const rafRef = useRef<number>(0);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   React.useEffect(() => {
     if (window.innerWidth <= 768) return;
 
     document.body.style.cursor = 'none';
 
+    let ticking = false;
+    
+    const updatePosition = (x: number, y: number) => {
+      if (cursorRef.current) {
+        cursorRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+      }
+      ticking = false;
+    };
+
     const moveCursor = (e: MouseEvent) => {
-      if (!isDetailOpen) {
-        mousePos.current = { x: e.clientX, y: e.clientY };
-      }
+      if (ticking) return;
+      requestAnimationFrame(() => updatePosition(e.clientX, e.clientY));
+      ticking = true;
     };
 
-    const updateCursor = () => {
-      if (!isDetailOpen && cursorRef.current) {
-        cursorPos.current.x += (mousePos.current.x - cursorPos.current.x) * 0.15;
-        cursorPos.current.y += (mousePos.current.y - cursorPos.current.y) * 0.15;
-        cursorRef.current.style.transform = `translate3d(${cursorPos.current.x}px, ${cursorPos.current.y}px, 0)`;
-      }
-      rafRef.current = requestAnimationFrame(updateCursor);
-    };
-
-    updateCursor();
-    window.addEventListener('mousemove', moveCursor);
+    document.addEventListener('mousemove', moveCursor);
     
     return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      window.removeEventListener('mousemove', moveCursor);
+      document.removeEventListener('mousemove', moveCursor);
       document.body.style.cursor = '';
     };
-  }, [isDetailOpen]);
+  }, []);
 
-  // Hide cursor completely on mobile or detail view
-  if (window.innerWidth <= 768 || isDetailOpen) return null;
+  if (window.innerWidth <= 768) return null;
 
   return (
-    <div ref={cursorRef} className="fixed top-0 left-0 pointer-events-none z-[9999] -translate-x-1/2 -translate-y-1/2">
-      <div className="w-6 h-6 rounded-full border border-yellow-500/50 flex items-center justify-center bg-yellow-500/10 backdrop-blur-sm shadow-lg">
-        <div className="w-2 h-2 bg-yellow-400 rounded-full" />
+    <div ref={cursorRef} className="fixed top-0 left-0 pointer-events-none z-[9999] w-0 h-0">
+      <div className="w-6 h-6 rounded-full border-2 border-yellow-500/60 bg-yellow-500/20 backdrop-blur-xl flex items-center justify-center shadow-2xl">
+        <div className="w-2.5 h-2.5 bg-yellow-400 rounded-full shadow-lg" />
       </div>
     </div>
   );
@@ -64,9 +57,9 @@ const AnimeCard = memo(({ anime, active, onSelect, registerRef }: {
     onClick={onSelect}
     className={`
       relative h-[45vh] md:h-[50vh] flex-shrink-0 overflow-hidden 
-      border border-yellow-500/10 group transition-all duration-500 rounded-lg shadow-lg
+      border border-yellow-500/10 group transition-all duration-500 rounded-xl
       ${active
-        ? 'w-[90vw] md:w-[420px] mx-2 md:mx-3 z-20 brightness-100 grayscale-0 shadow-2xl scale-105'
+        ? 'w-[90vw] md:w-[420px] mx-2 md:mx-3 z-20 brightness-100 grayscale-0 shadow-2xl scale-[1.02]'
         : 'w-[70vw] md:w-[150px] mx-1 md:mx-1 grayscale brightness-[0.4] hover:brightness-[0.6]'
       }
     `}
@@ -77,12 +70,12 @@ const AnimeCard = memo(({ anime, active, onSelect, registerRef }: {
       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
       loading="lazy"
     />
-    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
-    <div className={`absolute bottom-0 left-0 p-4 md:p-6 transition-all ${active ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-      <h2 className="text-xl md:text-2xl font-bold text-yellow-400 drop-shadow-lg line-clamp-2">
+    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent" />
+    <div className={`absolute bottom-0 left-0 p-4 md:p-6 transition-all duration-300 ${active ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 group-hover:opacity-80 group-hover:translate-y-0'}`}>
+      <h2 className="text-xl md:text-2xl font-bold text-yellow-400 drop-shadow-2xl line-clamp-2 leading-tight">
         {anime.title}
       </h2>
-      <p className="text-xs md:text-sm text-gray-300 line-clamp-2 mt-2">
+      <p className="text-xs md:text-sm text-gray-300 line-clamp-2 mt-1.5 leading-relaxed">
         {anime.description}
       </p>
     </div>
@@ -95,7 +88,6 @@ export default function App() {
   const [search, setSearch] = useState('');
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [selectedAnime, setSelectedAnime] = useState<Anime | null>(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   const cardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
@@ -107,9 +99,10 @@ export default function App() {
     });
   }, [category, search]);
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (selectedAnime || window.innerWidth <= 768) return;
 
+    // Throttled hover detection
     let found: string | null = null;
     for (const [id, el] of Object.entries(cardRefs.current)) {
       if (!el) continue;
@@ -119,39 +112,40 @@ export default function App() {
         break;
       }
     }
-    setHoveredId((prev) => (prev === found ? prev : found));
-  }, [selectedAnime]);
+    
+    if (found !== hoveredId) {
+      setHoveredId(found);
+    }
+  }, [selectedAnime, hoveredId]);
 
-  const openDetail = useCallback((anime: Anime) => {
+  const openDetail = (anime: Anime) => {
     setSelectedAnime(anime);
-    setIsDetailOpen(true);
-  }, []);
+  };
 
-  const closeDetail = useCallback(() => {
+  const closeDetail = () => {
     setSelectedAnime(null);
-    setIsDetailOpen(false);
     setHoveredId(null);
-  }, []);
+  };
 
   return (
-    <div className="h-screen w-screen bg-gradient-to-br from-[#030303] to-[#0a0a0a] text-white overflow-hidden">
-      <Cursor isDetailOpen={isDetailOpen} />
+    <div className="h-screen w-screen bg-gradient-to-br from-[#0a0a0a] via-[#030303] to-[#1a0a0a] text-white overflow-hidden">
+      <Cursor />
 
       {/* HEADER */}
-      <header className="p-4 md:p-6 flex flex-col sm:flex-row gap-4 items-center justify-between border-b border-yellow-500/10 bg-black/30 backdrop-blur-sm sticky top-0 z-30">
-        <h1 className="text-yellow-500 font-black text-xl md:text-2xl tracking-wide">
+      <header className="p-4 md:p-6 flex flex-col sm:flex-row gap-4 items-center justify-between border-b border-yellow-500/20 bg-black/40 backdrop-blur-md sticky top-0 z-40">
+        <h1 className="text-yellow-500 font-black text-xl md:text-2xl tracking-wider drop-shadow-lg">
           Anime Archive
         </h1>
 
-        <div className="flex gap-2 md:gap-4 overflow-x-auto pb-1 scrollbar-hide">
+        <div className="flex gap-2 md:gap-4 overflow-x-auto pb-1 -mb-1">
           {CATEGORIES.map((cat) => (
             <button
               key={cat}
               onClick={() => setCategory(cat)}
-              className={`px-3 py-1.5 md:px-3 md:py-1 border rounded-full text-xs md:text-sm whitespace-nowrap flex-shrink-0 transition-all backdrop-blur-sm ${
+              className={`px-4 py-2 md:px-3 md:py-1.5 border rounded-full text-xs md:text-sm whitespace-nowrap flex-shrink-0 transition-all duration-300 backdrop-blur-sm hover:scale-105 ${
                 category === cat
-                  ? 'border-yellow-500 text-yellow-400 bg-yellow-500/10 shadow-md'
-                  : 'border-transparent text-gray-500 hover:text-yellow-400 hover:border-yellow-500/50'
+                  ? 'border-yellow-500 text-yellow-400 bg-yellow-500/15 shadow-lg shadow-yellow-500/25'
+                  : 'border-transparent text-gray-400 hover:text-yellow-300 hover:border-yellow-500/50'
               }`}
             >
               {cat}
@@ -163,7 +157,7 @@ export default function App() {
           placeholder="Search Anime..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="bg-black/50 border border-yellow-500/30 px-4 py-2 text-sm rounded-lg backdrop-blur-sm w-full sm:w-64 focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 transition-all"
+          className="bg-black/60 border border-yellow-500/40 px-4 py-2.5 text-sm rounded-xl backdrop-blur-md w-full sm:w-72 focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-500/40 transition-all duration-300 placeholder-gray-400"
         />
       </header>
 
@@ -171,7 +165,7 @@ export default function App() {
       <main
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setHoveredId(null)}
-        className="flex items-center gap-2 overflow-x-auto h-[calc(100vh-140px)] px-4 md:px-10 py-4 snap-x snap-mandatory scrollbar-hide"
+        className="flex items-center gap-2 overflow-x-auto h-[calc(100vh-140px)] px-4 md:px-10 py-4 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-yellow-500/30 scrollbar-track-transparent"
       >
         {filteredAnime.map((anime) => (
           <AnimeCard
@@ -184,89 +178,90 @@ export default function App() {
         ))}
 
         {filteredAnime.length === 0 && (
-          <div className="text-center w-full text-gray-500 py-20 text-lg flex flex-col items-center">
-            <span className="text-4xl mb-4">😢</span>
-            No Anime Found
+          <div className="text-center w-full text-gray-500 py-20 text-lg flex flex-col items-center gap-4">
+            <div className="text-5xl">😢</div>
+            <div>No Anime Found</div>
           </div>
         )}
       </main>
 
-      {/* DETAIL VIEW - 100% LAG FREE */}
+      {/* DETAIL VIEW - ABSOLUT LAG FREE */}
       {selectedAnime && (
         <>
-          {/* Background Overlay */}
           <div 
-            className="fixed inset-0 bg-black/95 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-black/98 backdrop-blur-sm z-[9998]"
             onClick={closeDetail}
           />
-          
-          {/* Content */}
-          <div className="fixed inset-0 z-[51] flex items-center justify-center p-4 pointer-events-none">
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
             <div
-              className="relative w-full max-w-4xl max-h-[90vh] bg-[#0a0a0a]/95 border border-yellow-500/40 rounded-2xl shadow-2xl overflow-hidden pointer-events-auto max-w-lg mx-4 lg:max-w-5xl lg:max-h-[85vh]"
+              className="relative w-full max-w-4xl max-h-[95vh] bg-gradient-to-br from-[#0f0f0f] to-[#1a1a1a] border-2 border-yellow-500/50 rounded-3xl shadow-2xl backdrop-blur-xl overflow-hidden max-w-md md:max-w-3xl lg:max-w-6xl"
               onClick={(e) => e.stopPropagation()}
             >
               <button
                 onClick={closeDetail}
-                className="absolute top-4 right-4 text-yellow-400 hover:text-yellow-200 text-2xl font-bold z-10 p-2 rounded-full hover:bg-yellow-500/20 transition-all backdrop-blur-sm"
-                aria-label="Close"
+                className="absolute top-6 right-6 text-yellow-400 hover:text-yellow-300 text-3xl font-black z-10 p-3 rounded-2xl hover:bg-yellow-500/20 backdrop-blur-sm transition-all duration-300 shadow-xl hover:scale-110 hover:shadow-yellow-500/30"
+                aria-label="Close modal"
               >
                 ×
               </button>
 
-              <div className="p-6 md:p-8 overflow-y-auto max-h-[90vh]">
-                <h2 className="text-2xl md:text-4xl lg:text-5xl font-black text-yellow-400 mb-6 md:mb-8 drop-shadow-2xl text-center md:text-left leading-tight">
+              <div className="p-8 md:p-12 max-h-[95vh] overflow-y-auto">
+                <h2 className="text-3xl md:text-5xl lg:text-6xl font-black text-yellow-400 mb-8 md:mb-12 drop-shadow-2xl text-center leading-tight tracking-tight bg-gradient-to-r from-yellow-400 to-yellow-200 bg-clip-text">
                   {selectedAnime.title}
                 </h2>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 items-start">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 xl:gap-12 items-start">
                   {/* Cover */}
-                  <div className="order-2 lg:order-1">
-                    <div className="relative overflow-hidden rounded-xl border-2 border-yellow-500/30 shadow-2xl">
+                  <div className="order-2 xl:order-1">
+                    <div className="relative group overflow-hidden rounded-2xl border-4 border-yellow-500/40 shadow-2xl hover:shadow-yellow-500/50 transition-all duration-500">
                       <img
                         src={selectedAnime.coverImageURL}
                         alt={selectedAnime.title}
-                        className="w-full h-64 md:h-80 lg:h-[450px] object-cover hover:scale-105 transition-transform duration-500"
+                        className="w-full aspect-[2/3] md:aspect-[3/4] object-cover group-hover:scale-110 transition-transform duration-700"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent pointer-events-none" />
                     </div>
                   </div>
 
                   {/* Info + Comment */}
-                  <div className="order-1 lg:order-2 flex flex-col h-full">
+                  <div className="order-1 xl:order-2 space-y-8">
                     {/* Description */}
-                    <p className="text-sm md:text-base lg:text-lg text-gray-200 leading-relaxed mb-6 md:mb-8 flex-1">
-                      {selectedAnime.description}
-                    </p>
+                    <div className="space-y-3">
+                      <h3 className="text-lg md:text-xl font-semibold text-yellow-300 tracking-wide">Description</h3>
+                      <p className="text-sm md:text-base lg:text-lg text-gray-200 leading-relaxed max-h-32 overflow-y-auto">
+                        {selectedAnime.description}
+                      </p>
+                    </div>
 
                     {/* Genres */}
-                    <div className="flex flex-wrap gap-2 mb-6 md:mb-8">
-                      {selectedAnime.genres.map((g) => (
-                        <span
-                          key={g}
-                          className="px-3 py-1.5 border border-yellow-500/40 text-yellow-300 text-xs md:text-sm rounded-full bg-yellow-500/5 font-medium backdrop-blur-sm hover:bg-yellow-500/10 transition-all"
-                        >
-                          {g}
-                        </span>
-                      ))}
+                    <div>
+                      <h3 className="text-lg md:text-xl font-semibold text-yellow-300 tracking-wide mb-4">Genres</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedAnime.genres.map((g) => (
+                          <span
+                            key={g}
+                            className="px-4 py-2 border border-yellow-500/50 text-yellow-300 text-sm md:text-base rounded-xl bg-gradient-to-r from-yellow-500/5 to-orange-500/5 font-semibold backdrop-blur-sm hover:bg-yellow-500/20 transition-all duration-300 hover:scale-105"
+                          >
+                            {g}
+                          </span>
+                        ))}
+                      </div>
                     </div>
 
                     {/* COMMENT SECTION */}
-                    <div className="border-t border-yellow-500/30 pt-6 mb-8">
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center font-bold text-black text-sm md:text-lg flex-shrink-0 mt-1 shadow-lg">
+                    <div className="pt-8 border-t-2 border-yellow-500/30">
+                      <div className="flex items-start gap-4">
+                        <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-yellow-400 via-orange-400 to-red-400 rounded-2xl flex items-center justify-center font-black text-black text-xl md:text-2xl flex-shrink-0 shadow-2xl ring-4 ring-yellow-400/30">
                           ME
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="text-xs md:text-sm font-semibold text-yellow-300 mb-3 tracking-wide">
-                            My Comment:
-                          </h4>
+                          <h3 className="text-lg md:text-xl font-semibold text-yellow-300 mb-4 tracking-wide">My Comment</h3>
                           {selectedAnime.category === 'must watch' ? (
-                            <p className="text-lg md:text-xl lg:text-2xl font-black bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 bg-clip-text text-transparent drop-shadow-lg animate-pulse">
+                            <div className="text-xl md:text-2xl lg:text-3xl font-black bg-gradient-to-r from-yellow-400 via-orange-400 to-red-500 bg-clip-text text-transparent drop-shadow-2xl animate-pulse">
                               🔥 JUST PEAK CINEMA 🔥
-                            </p>
+                            </div>
                           ) : (
-                            <div className="text-base md:text-lg lg:text-xl text-gray-100 italic bg-gray-900/70 px-4 md:px-6 py-3 md:py-4 rounded-xl border border-gray-700/60 backdrop-blur-sm shadow-lg hover:shadow-yellow-500/10 transition-all">
+                            <div className="text-lg md:text-xl lg:text-2xl text-gray-100 font-medium italic bg-gradient-to-r from-gray-900/80 to-black/60 px-6 md:px-8 py-6 md:py-8 rounded-2xl border-2 border-gray-700/50 backdrop-blur-xl shadow-2xl hover:shadow-yellow-500/20 hover:border-yellow-500/30 transition-all duration-400">
                               {selectedAnime.comment || 'No notes yet...'}
                             </div>
                           )}
@@ -275,18 +270,18 @@ export default function App() {
                     </div>
 
                     {/* Buttons */}
-                    <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-yellow-500/20">
+                    <div className="flex flex-col sm:flex-row gap-4 pt-8 border-t-2 border-yellow-500/20">
                       {selectedAnime.trailerUrl && (
                         <button
                           onClick={() => window.open(selectedAnime.trailerUrl, '_blank', 'noopener,noreferrer')}
-                          className="flex-1 px-6 py-3 md:py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-black font-bold text-sm md:text-base lg:text-lg rounded-xl hover:from-yellow-400 hover:to-orange-400 shadow-lg hover:shadow-yellow-500/25 transition-all duration-300 hover:-translate-y-1"
+                          className="flex-1 px-8 py-4 bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 text-black font-black text-base md:text-lg rounded-2xl hover:from-yellow-400 hover:via-orange-400 hover:to-red-400 shadow-2xl hover:shadow-yellow-500/50 transition-all duration-500 hover:-translate-y-2 hover:scale-[1.02] backdrop-blur-xl border border-yellow-400/50"
                         >
                           ▶ Watch Trailer
                         </button>
                       )}
                       <button
                         onClick={closeDetail}
-                        className="flex-1 px-6 py-3 md:py-4 border-2 border-yellow-500 text-yellow-400 font-semibold text-sm md:text-base lg:text-lg rounded-xl hover:bg-yellow-500/20 hover:border-yellow-400 transition-all duration-300 backdrop-blur-sm"
+                        className="flex-1 px-8 py-4 border-2 border-yellow-500 text-yellow-400 font-semibold text-base md:text-lg rounded-2xl hover:bg-yellow-500/20 hover:border-yellow-400 hover:text-yellow-300 backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] shadow-xl hover:shadow-yellow-500/30"
                       >
                         Back to List
                       </button>
