@@ -5,7 +5,6 @@ import { Anime, AnimeCategory } from './types';
 
 const Cursor = () => {
   const cursorRef = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
