@@ -1,21 +1,16 @@
-import React, { useState, useMemo, useRef, useEffect, useCallback, memo } from 'react';
+import React, { useState, useMemo, useRef, useCallback, memo } from 'react';
 import { ANIME_LIST, CATEGORIES } from './constants';
 import { Anime } from './types';
 
-/* =============================
-   Custom Cursor (Optimiert)
-============================= */
-
+/* ========== CUSTOM CURSOR ========== */
 const Cursor = () => {
   const cursorRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    if (isTouchDevice) return;
-
+  React.useEffect(() => {
     const moveCursor = (e: MouseEvent) => {
       if (cursorRef.current) {
-        cursorRef.current.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
+        cursorRef.current.style.transform =
+          `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
       }
     };
 
@@ -28,133 +23,194 @@ const Cursor = () => {
       ref={cursorRef}
       className="fixed top-0 left-0 pointer-events-none z-[9999] -translate-x-1/2 -translate-y-1/2"
     >
-      <div className="w-5 h-5 rounded-full border border-yellow-500/60 flex items-center justify-center bg-yellow-500/10">
-        <div className="w-1 h-1 bg-yellow-400 rounded-full shadow-[0_0_8px_#FFD700]" />
+      <div className="w-6 h-6 rounded-full border border-yellow-500/50 flex items-center justify-center bg-yellow-500/10">
+        <div className="w-2 h-2 bg-yellow-400 rounded-full" />
       </div>
     </div>
   );
 };
 
-/* =============================
-   Anime Card (Optimiert)
-============================= */
+/* ========== ANIME CARD ========== */
+const AnimeCard = memo(
+  ({
+    anime,
+    active,
+    onSelect,
+    registerRef,
+  }: {
+    anime: Anime;
+    active: boolean;
+    onSelect: () => void;
+    registerRef: (el: HTMLDivElement | null) => void;
+  }) => {
+    return (
+      <div
+        ref={registerRef}
+        onClick={onSelect}
+        className={`
+          kinetic-card relative h-[45vh] flex-shrink-0 overflow-hidden 
+          border border-yellow-500/10 group transition-all duration-500
+          ${active
+            ? 'w-[420px] mx-3 z-20 brightness-100 grayscale-0'
+            : 'w-[150px] mx-1 grayscale brightness-[0.4] hover:brightness-[0.6]'
+          }
+        `}
+      >
+        <img
+          src={anime.coverImageURL}
+          alt={anime.title}
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+        />
 
-type CardProps = {
-  anime: Anime;
-  active: boolean;
-  onSelect: () => void;
-  registerRef: (el: HTMLDivElement | null) => void;
-};
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
 
-const AnimeCard = memo(({ anime, active, onSelect, registerRef }: CardProps) => {
-  return (
-    <div
-      ref={registerRef}
-      onClick={onSelect}
-      className={`
-        kinetic-card relative h-[50vh] md:h-[45vh] flex-shrink-0 
-        overflow-hidden border border-yellow-500/10 group transition-all duration-700
-        ${active ? 'w-[420px] z-20 brightness-100' : 'w-[150px] brightness-[0.5]'}
-      `}
-    >
-      <img
-        src={anime.coverImageURL}
-        alt={anime.title}
-        className="w-full h-full object-cover"
-        loading="lazy"
-      />
+        <div
+          className={`
+            absolute bottom-0 left-0 p-6 transition-all
+            ${active ? 'opacity-100' : 'opacity-0'}
+          `}
+        >
+          <h2 className="text-2xl font-bold text-yellow-400">
+            {anime.title}
+          </h2>
 
-      <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black/90">
-        <h3 className="text-yellow-400 font-bold text-sm truncate">
-          {anime.title}
-        </h3>
+          <p className="text-sm text-gray-300 line-clamp-2 mt-2">
+            {anime.description}
+          </p>
+        </div>
       </div>
-    </div>
-  );
-});
+    );
+  }
+);
 
-/* =============================
-   MAIN APP
-============================= */
-
+/* ========== MAIN APP ========== */
 export default function App() {
-  const [category, setCategory] = useState("All");
-  const [search, setSearch] = useState("");
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [category, setCategory] = useState('All');
+  const [search, setSearch] = useState('');
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [selectedAnime, setSelectedAnime] = useState<Anime | null>(null);
 
-  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const cardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   const filteredAnime = useMemo(() => {
-    return ANIME_LIST.filter(a => {
-      const matchCat = category === "All" || a.category === category;
+    return ANIME_LIST.filter((a) => {
+      const matchCat = category === 'All' || a.category === category;
       const matchSearch = a.title.toLowerCase().includes(search.toLowerCase());
       return matchCat && matchSearch;
     });
   }, [category, search]);
 
-  /* Hover Logic */
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    let newActive: string | null = null;
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (selectedAnime) return;
 
-    for (const [id, el] of Object.entries(cardRefs.current)) {
-      if (!el) continue;
+      let found: string | null = null;
 
-      const rect = el.getBoundingClientRect();
+      for (const [id, el] of Object.entries(cardRefs.current)) {
+        if (!el) continue;
 
-      if (e.clientX >= rect.left && e.clientX <= rect.right) {
-        newActive = id;
-        break;
+        const rect = el.getBoundingClientRect();
+
+        if (e.clientX >= rect.left && e.clientX <= rect.right) {
+          found = id;
+          break;
+        }
       }
-    }
 
-    if (newActive !== activeId) {
-      setActiveId(newActive);
-    }
-  }, [activeId]);
+      setHoveredId(found);
+    },
+    [selectedAnime]
+  );
 
   return (
-    <div className="h-screen w-screen bg-black text-white overflow-hidden">
-
+    <div className="h-screen w-screen bg-[#030303] text-white overflow-hidden">
       <Cursor />
 
       {/* HEADER */}
-      <header className="p-4 flex gap-4 items-center bg-black/80 border-b border-yellow-500/10">
+      <header className="p-6 flex flex-col md:flex-row gap-6 items-center justify-between border-b border-yellow-500/10">
+        <h1 className="text-yellow-500 font-bold text-xl">
+          Anime Archive
+        </h1>
+
+        <div className="flex gap-4 overflow-x-auto">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setCategory(cat)}
+              className={`px-3 py-1 border ${
+                category === cat
+                  ? 'border-yellow-500 text-yellow-400'
+                  : 'border-transparent text-gray-500'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
         <input
+          placeholder="Search Anime..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search Anime..."
-          className="bg-black border border-yellow-500/20 p-2 text-yellow-400"
+          className="bg-black border border-yellow-500/20 px-4 py-2 text-sm"
         />
-
-        {CATEGORIES.map(cat => (
-          <button
-            key={cat}
-            onClick={() => setCategory(cat)}
-            className={`
-              px-3 py-1 text-sm
-              ${category === cat ? 'text-yellow-400' : 'text-gray-500'}
-            `}
-          >
-            {cat}
-          </button>
-        ))}
       </header>
 
-      {/* LIST */}
+      {/* MAIN RAIL */}
       <main
         onMouseMove={handleMouseMove}
+        onMouseLeave={() => setHoveredId(null)}
         className="flex items-center gap-2 overflow-x-auto h-full px-10"
       >
-        {filteredAnime.map(anime => (
+        {filteredAnime.map((anime) => (
           <AnimeCard
             key={anime.id}
             anime={anime}
-            active={activeId === anime.id}
-            onSelect={() => setActiveId(anime.id)}
+            active={hoveredId === anime.id}
+            onSelect={() => setSelectedAnime(anime)}
             registerRef={(el) => (cardRefs.current[anime.id] = el)}
           />
         ))}
+
+        {filteredAnime.length === 0 && (
+          <div className="text-center w-full text-gray-600">
+            No Anime Found
+          </div>
+        )}
       </main>
+
+      {/* DETAIL VIEW */}
+      {selectedAnime && (
+        <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-10">
+          <div className="bg-[#080808] border border-yellow-500/20 p-8 max-w-3xl w-full relative">
+            <button
+              onClick={() => setSelectedAnime(null)}
+              className="absolute top-4 right-4 text-yellow-500"
+            >
+              CLOSE ✕
+            </button>
+
+            <h2 className="text-3xl font-bold text-yellow-400 mb-4">
+              {selectedAnime.title}
+            </h2>
+
+            <p className="text-gray-300 mb-4">
+              {selectedAnime.description}
+            </p>
+
+            <div className="flex gap-2 flex-wrap">
+              {selectedAnime.genres.map((g) => (
+                <span
+                  key={g}
+                  className="px-2 py-1 border border-yellow-500/20 text-yellow-300 text-xs"
+                >
+                  {g}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
