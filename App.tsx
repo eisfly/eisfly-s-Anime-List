@@ -2,11 +2,12 @@ import React, { useState, useMemo, useRef, useCallback, memo, useEffect } from '
 import { ANIME_LIST, CATEGORIES } from './constants';
 import { Anime } from './types';
 
-/* ========== SMOOTH CUSTOM CURSOR ========== */
+/* ========== SMOOTH CURSOR - PAUSIERT IN DETAIL VIEW ========== */
 const Cursor = () => {
   const cursorRef = useRef<HTMLDivElement>(null);
   const mousePos = useRef({ x: 0, y: 0 });
   const cursorPos = useRef({ x: 0, y: 0 });
+  const rafRef = useRef<number>(0);
 
   React.useEffect(() => {
     if (window.innerWidth <= 768) return;
@@ -14,16 +15,26 @@ const Cursor = () => {
     document.body.style.cursor = 'none';
 
     const moveCursor = (e: MouseEvent) => {
+      // PAUSE CURSOR WENN DETAIL VIEW OFFEN
+      if (document.querySelector('.detail-overlay')) {
+        return;
+      }
       mousePos.current = { x: e.clientX, y: e.clientY };
     };
 
     const updateCursor = () => {
+      // PAUSE CURSOR WENN DETAIL VIEW OFFEN
+      if (document.querySelector('.detail-overlay')) {
+        rafRef.current = requestAnimationFrame(updateCursor);
+        return;
+      }
+
       if (cursorRef.current) {
         cursorPos.current.x += (mousePos.current.x - cursorPos.current.x) * 0.125;
         cursorPos.current.y += (mousePos.current.y - cursorPos.current.y) * 0.125;
         cursorRef.current.style.transform = `translate3d(${cursorPos.current.x}px, ${cursorPos.current.y}px, 0)`;
       }
-      requestAnimationFrame(updateCursor);
+      rafRef.current = requestAnimationFrame(updateCursor);
     };
 
     updateCursor();
@@ -31,6 +42,7 @@ const Cursor = () => {
     
     return () => {
       window.removeEventListener('mousemove', moveCursor);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
       document.body.style.cursor = '';
     };
   }, []);
@@ -45,6 +57,7 @@ const Cursor = () => {
     </div>
   );
 };
+
 
 /* ========== ANIME CARD ========== */
 const AnimeCard = memo(({ anime, active, onSelect, registerRef }: {
