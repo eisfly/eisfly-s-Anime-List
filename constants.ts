@@ -50,7 +50,7 @@ const ThemedStyles = () => (
     .search-shell {
       position: relative;
       border-radius: 18px;
-      padding: 1px;
+      padding: 1px; /* gradient border thickness */
       background: radial-gradient(120% 120% at 20% 0%, rgba(234,179,8,0.35), transparent 55%),
                   linear-gradient(90deg, rgba(234,179,8,0.30), rgba(234,179,8,0.06), rgba(234,179,8,0.30));
       box-shadow: 0 18px 60px rgba(0,0,0,0.45);
@@ -84,6 +84,36 @@ const ThemedStyles = () => (
       border: 1px solid rgba(234,179,8,0.18);
       background: rgba(234,179,8,0.08);
       color: rgba(234,179,8,0.75);
+    }
+
+    /* ===== Themed Select (Genre Filter) ===== */
+    .select-shell {
+      position: relative;
+      border-radius: 18px;
+      padding: 1px;
+      background: radial-gradient(120% 120% at 20% 0%, rgba(234,179,8,0.28), transparent 55%),
+                  linear-gradient(90deg, rgba(234,179,8,0.26), rgba(234,179,8,0.05), rgba(234,179,8,0.26));
+      box-shadow: 0 18px 60px rgba(0,0,0,0.35);
+    }
+    .select-inner {
+      border-radius: 17px;
+      background: linear-gradient(180deg, rgba(0,0,0,0.38), rgba(0,0,0,0.18));
+      border: 1px solid rgba(255,255,255,0.06);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    .genre-select {
+      width: 100%;
+      outline: none;
+      background: transparent;
+      color: rgba(255,255,255,0.88);
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+    }
+    .genre-select option {
+      background: #0a0a0a;
+      color: rgba(255,255,255,0.9);
     }
   `}</style>
 );
@@ -249,6 +279,9 @@ export default function App() {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [isChanging, setIsChanging] = useState(false);
 
+  // ✅ Genre Filter
+  const [selectedGenre, setSelectedGenre] = useState<string>('All');
+
   // 👇 Platzhalter für "My Comment" (später machst du es dynamisch)
   const MY_COMMENT_PLACEHOLDER =
     '📝 My Comment: (hier kommt später dein Kommentar rein — z.B. warum der Anime ein GOAT ist)';
@@ -256,13 +289,46 @@ export default function App() {
   const railRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
+  // ✅ Charlotte nur in "Good"
+  const CHARLOTTE: Anime = useMemo(
+    () => ({
+      id: 'charlotte',
+      title: 'Charlotte',
+      description:
+        'A boy discovers his supernatural ability—and gets pulled into a secret war between gifted teenagers. Emotional, weird, and worth the ride.',
+      coverImageURL:
+        'https://images.unsplash.com/photo-1541963463532-d68292c34b19?auto=format&fit=crop&w=1200&q=60', // Placeholder – ersetz mit echtem Cover
+      genres: ['Drama', 'Supernatural', 'School', 'Comedy'],
+      releaseYear: 2015,
+      status: 'Finished',
+      category: 'Good',
+      // comment: ''  // falls dein Type ein comment-Feld hat, kannst du es setzen
+    }),
+    []
+  );
+
+  // ✅ Build list with Charlotte injected if not already present
+  const ANIME_LIST_WITH_CHARLOTTE = useMemo(() => {
+    const exists = ANIME_LIST.some((a) => a.title.toLowerCase() === 'charlotte');
+    return exists ? ANIME_LIST : [...ANIME_LIST, CHARLOTTE];
+  }, [CHARLOTTE]);
+
+  // ✅ Genres aus der kompletten Liste sammeln (für Dropdown)
+  const ALL_GENRES = useMemo(() => {
+    const set = new Set<string>();
+    ANIME_LIST_WITH_CHARLOTTE.forEach((a) => a.genres.forEach((g) => set.add(g)));
+    return ['All', ...Array.from(set).sort((a, b) => a.localeCompare(b))];
+  }, [ANIME_LIST_WITH_CHARLOTTE]);
+
   const filteredAnime = useMemo(() => {
-    return ANIME_LIST.filter((a) => {
+    const q = searchQuery.toLowerCase();
+    return ANIME_LIST_WITH_CHARLOTTE.filter((a) => {
       const matchCat = selectedCategory === 'All' || a.category === selectedCategory;
-      const matchSearch = a.title.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchCat && matchSearch;
+      const matchSearch = a.title.toLowerCase().includes(q);
+      const matchGenre = selectedGenre === 'All' || a.genres.includes(selectedGenre);
+      return matchCat && matchSearch && matchGenre;
     });
-  }, [selectedCategory, searchQuery]);
+  }, [ANIME_LIST_WITH_CHARLOTTE, selectedCategory, searchQuery, selectedGenre]);
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
@@ -370,7 +436,8 @@ export default function App() {
         <div className="mx-auto max-w-[1920px] px-4 md:px-10 pt-4 md:pt-6">
           <div className="bg-black/55 backdrop-blur-xl border border-yellow-500/12 rounded-3xl shadow-[0_20px_80px_rgba(0,0,0,0.55)]">
             <div className="px-4 md:px-6 py-4 md:py-5">
-              <div className="grid grid-cols-1 lg:grid-cols-[auto,1fr,360px] gap-4 md:gap-5 items-center">
+              {/* ✅ Jetzt 4 Spalten auf Desktop: Brand | Filter | Genre | Search */}
+              <div className="grid grid-cols-1 lg:grid-cols-[auto,1fr,260px,360px] gap-4 md:gap-5 items-center">
                 {/* Brand */}
                 <div className="min-w-0">
                   <h1 className="text-base md:text-lg font-black tracking-tight text-yellow-400 whitespace-nowrap">
@@ -405,6 +472,32 @@ export default function App() {
                           </button>
                         );
                       })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* ✅ Genre Filter (neu) */}
+                <div className="w-full lg:w-[260px] min-w-0">
+                  <div className="select-shell">
+                    <div className="select-inner flex items-center gap-3 px-3 py-2.5">
+                      <div className="w-9 h-9 rounded-xl bg-yellow-500/10 border border-yellow-500/15 flex items-center justify-center text-yellow-300 shadow-[0_0_18px_rgba(234,179,8,0.10)]">
+                        🎭
+                      </div>
+
+                      <select
+                        value={selectedGenre}
+                        onChange={(e) => setSelectedGenre(e.target.value)}
+                        className="genre-select text-[14px] md:text-[14px] font-semibold tracking-wide"
+                        aria-label="Filter by genre"
+                      >
+                        {ALL_GENRES.map((g) => (
+                          <option key={g} value={g}>
+                            {g === 'All' ? 'All Genres' : g}
+                          </option>
+                        ))}
+                      </select>
+
+                      <div className="pointer-events-none text-yellow-400/60 pr-1">▾</div>
                     </div>
                   </div>
                 </div>
@@ -532,7 +625,7 @@ export default function App() {
 
             {/* Right Content */}
             <div className="themed-scrollbar flex-1 p-6 md:p-10 lg:p-12 overflow-y-auto">
-              {/* ✅ Statt "mw-1" / Abkürzung: My Comment Placeholder */}
+              {/* Placeholder Comment */}
               <div className="rounded-2xl border border-yellow-500/15 bg-yellow-500/8 px-4 py-3 mb-5">
                 <p className="text-[12px] md:text-[13px] font-semibold text-yellow-200/90">
                   {MY_COMMENT_PLACEHOLDER}
