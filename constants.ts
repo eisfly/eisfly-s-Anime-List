@@ -175,9 +175,9 @@ export const ANIME_LIST: Anime[] = [
     status: 'Ongoing'
   },
   {
-    id: 'goat-6',
+    id: 'good-9',
     title: 'Charlotte',
-    category: Category.GOATS,
+    category: Category.GOOD,
     genres: ['Supernatural', 'Drama', 'School'],
     description: 'Teenagers with imperfect superpowers navigate the challenges of their abilities and hidden conspiracies.',
     coverImageURL: 'https://i.pinimg.com/564x/0b/6f/0c/0b6f0c0d98b1e3c6db79dd50675c94ca.jpg',
