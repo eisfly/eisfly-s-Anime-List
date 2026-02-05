@@ -238,7 +238,7 @@ export default function App() {
                       ME
                     </div>
                     <div className="flex-1">
-                      <h4 className="text-sm font-semibold text-yellow-300 mb-3">Mein Kommentar:</h4>
+                      <h4 className="text-sm font-semibold text-yellow-300 mb-3">short comment from eisfly:</h4>
                       {selectedAnime.category === 'must watch' ? (
                         <p className="text-xl font-black bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 bg-clip-text text-transparent drop-shadow-lg">
                           🔥 JUST PEAK CINEMA 🔥
