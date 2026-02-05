@@ -2,44 +2,44 @@ import React, { useState, useMemo, useRef, useCallback, memo } from 'react';
 import { ANIME_LIST, CATEGORIES } from './constants';
 import { Anime } from './types';
 
-/* ========== ULTRA SMOOTH CURSOR - DETAIL VIEW OFF ========== */
+/* ========== ULTRA SMOOTH CURSOR - KOMPLETT AUS IN DETAIL VIEW ========== */
 const Cursor = () => {
   const cursorRef = useRef<HTMLDivElement>(null);
+  const ticking = useRef(false);
 
   React.useEffect(() => {
     if (window.innerWidth <= 768) return;
 
     document.body.style.cursor = 'none';
 
-    let ticking = false;
-    
     const updatePosition = (x: number, y: number) => {
-      if (cursorRef.current) {
+      if (cursorRef.current && !document.querySelector('.detail-modal')) {
         cursorRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
       }
-      ticking = false;
+      ticking.current = false;
     };
 
     const moveCursor = (e: MouseEvent) => {
-      // **LAG FIX**: Cursor komplett aus in Detail View
-      if (document.querySelector('[class*="detail"], [class*="modal"], .fixed.inset-0')) {
+      // **KOMPLETT STOP** wenn Detail View offen
+      if (document.querySelector('.detail-modal')) {
         return;
       }
       
-      if (ticking) return;
+      if (ticking.current) return;
       requestAnimationFrame(() => updatePosition(e.clientX, e.clientY));
-      ticking = true;
+      ticking.current = true;
     };
 
     document.addEventListener('mousemove', moveCursor);
     
     return () => {
       document.removeEventListener('mousemove', moveCursor);
-      document.body.style.cursor = '';
+      document.body.style.cursor = 'default';
     };
   }, []);
 
-  if (window.innerWidth <= 768) return null;
+  // Cursor wird nicht gerendert wenn Detail View offen
+  if (window.innerWidth <= 768 || document.querySelector('.detail-modal')) return null;
 
   return (
     <div ref={cursorRef} className="fixed top-0 left-0 pointer-events-none z-[9999] w-0 h-0">
@@ -189,111 +189,100 @@ export default function App() {
         )}
       </main>
 
-      {/* DETAIL VIEW - CURSOR KOMPLETT AUS */}
+      {/* DETAIL VIEW - CUSTOM CURSOR 100% AUS + NORMALE MAUS UNSICHTBAR */}
       {selectedAnime && (
-        <>
-          {/* Normaler Cursor WIEDER AN in Detail View */}
-          <style jsx>{`
-            body { cursor: default !important; }
-          `}</style>
-          
-          <div 
-            className="fixed inset-0 bg-black/98 backdrop-blur-sm z-[9998]"
-            onClick={closeDetail}
-          />
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-            <div
-              className="relative w-full max-w-4xl max-h-[95vh] bg-gradient-to-br from-[#0f0f0f] to-[#1a1a1a] border-2 border-yellow-500/50 rounded-3xl shadow-2xl backdrop-blur-xl overflow-hidden max-w-md md:max-w-3xl lg:max-w-6xl"
-              onClick={(e) => e.stopPropagation()}
+        <div className="detail-modal fixed inset-0 bg-black/98 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+          <div
+            className="relative w-full max-w-4xl max-h-[95vh] bg-gradient-to-br from-[#0f0f0f] to-[#1a1a1a] border-2 border-yellow-500/50 rounded-3xl shadow-2xl backdrop-blur-xl overflow-hidden max-w-md md:max-w-3xl lg:max-w-6xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={closeDetail}
+              className="absolute top-6 right-6 text-yellow-400 hover:text-yellow-300 text-3xl font-black z-10 p-3 rounded-2xl hover:bg-yellow-500/20 backdrop-blur-sm transition-all duration-300 shadow-xl hover:scale-110 hover:shadow-yellow-500/30"
             >
-              <button
-                onClick={closeDetail}
-                className="absolute top-6 right-6 text-yellow-400 hover:text-yellow-300 text-3xl font-black z-10 p-3 rounded-2xl hover:bg-yellow-500/20 backdrop-blur-sm transition-all duration-300 shadow-xl hover:scale-110 hover:shadow-yellow-500/30"
-              >
-                ×
-              </button>
+              ×
+            </button>
 
-              <div className="p-8 md:p-12 max-h-[95vh] overflow-y-auto">
-                <h2 className="text-3xl md:text-5xl lg:text-6xl font-black text-yellow-400 mb-8 md:mb-12 drop-shadow-2xl text-center leading-tight tracking-tight bg-gradient-to-r from-yellow-400 to-yellow-200 bg-clip-text">
-                  {selectedAnime.title}
-                </h2>
+            <div className="p-8 md:p-12 max-h-[95vh] overflow-y-auto">
+              <h2 className="text-3xl md:text-5xl lg:text-6xl font-black text-yellow-400 mb-8 md:mb-12 drop-shadow-2xl text-center leading-tight tracking-tight bg-gradient-to-r from-yellow-400 to-yellow-200 bg-clip-text">
+                {selectedAnime.title}
+              </h2>
 
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 xl:gap-12 items-start">
-                  {/* Cover */}
-                  <div className="order-2 xl:order-1">
-                    <div className="relative group overflow-hidden rounded-2xl border-4 border-yellow-500/40 shadow-2xl hover:shadow-yellow-500/50 transition-all duration-500">
-                      <img
-                        src={selectedAnime.coverImageURL}
-                        alt={selectedAnime.title}
-                        className="w-full aspect-[2/3] md:aspect-[3/4] object-cover group-hover:scale-110 transition-transform duration-700"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent pointer-events-none" />
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 xl:gap-12 items-start">
+                {/* Cover */}
+                <div className="order-2 xl:order-1">
+                  <div className="relative group overflow-hidden rounded-2xl border-4 border-yellow-500/40 shadow-2xl hover:shadow-yellow-500/50 transition-all duration-500">
+                    <img
+                      src={selectedAnime.coverImageURL}
+                      alt={selectedAnime.title}
+                      className="w-full aspect-[2/3] md:aspect-[3/4] object-cover group-hover:scale-110 transition-transform duration-700"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent pointer-events-none" />
+                  </div>
+                </div>
+
+                {/* Info + Comment */}
+                <div className="order-1 xl:order-2 space-y-8">
+                  {/* Description */}
+                  <div className="space-y-3">
+                    <h3 className="text-lg md:text-xl font-semibold text-yellow-300 tracking-wide">Description</h3>
+                    <p className="text-sm md:text-base lg:text-lg text-gray-200 leading-relaxed max-h-32 overflow-y-auto">
+                      {selectedAnime.description}
+                    </p>
+                  </div>
+
+                  {/* Genres */}
+                  <div>
+                    <h3 className="text-lg md:text-xl font-semibold text-yellow-300 tracking-wide mb-4">Genres</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedAnime.genres.map((g) => (
+                        <span
+                          key={g}
+                          className="px-4 py-2 border border-yellow-500/50 text-yellow-300 text-sm md:text-base rounded-xl bg-gradient-to-r from-yellow-500/5 to-orange-500/5 font-semibold backdrop-blur-sm hover:bg-yellow-500/20 transition-all duration-300 hover:scale-105"
+                        >
+                          {g}
+                        </span>
+                      ))}
                     </div>
                   </div>
 
-                  {/* Info + Comment */}
-                  <div className="order-1 xl:order-2 space-y-8">
-                    {/* Description */}
-                    <div className="space-y-3">
-                      <h3 className="text-lg md:text-xl font-semibold text-yellow-300 tracking-wide">Description</h3>
-                      <p className="text-sm md:text-base lg:text-lg text-gray-200 leading-relaxed max-h-32 overflow-y-auto">
-                        {selectedAnime.description}
-                      </p>
-                    </div>
-
-                    {/* Genres */}
-                    <div>
-                      <h3 className="text-lg md:text-xl font-semibold text-yellow-300 tracking-wide mb-4">Genres</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedAnime.genres.map((g) => (
-                          <span
-                            key={g}
-                            className="px-4 py-2 border border-yellow-500/50 text-yellow-300 text-sm md:text-base rounded-xl bg-gradient-to-r from-yellow-500/5 to-orange-500/5 font-semibold backdrop-blur-sm hover:bg-yellow-500/20 transition-all duration-300 hover:scale-105"
-                          >
-                            {g}
-                          </span>
-                        ))}
+                  {/* COMMENT SECTION */}
+                  <div className="pt-8 border-t-2 border-yellow-500/30">
+                    <div className="flex items-start gap-4">
+                      <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-yellow-400 via-orange-400 to-red-400 rounded-2xl flex items-center justify-center font-black text-black text-xl md:text-2xl flex-shrink-0 shadow-2xl ring-4 ring-yellow-400/30">
+                        ME
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg md:text-xl font-semibold text-yellow-300 mb-4 tracking-wide">My Comment</h3>
+                        {selectedAnime.category === 'must watch' ? (
+                          <div className="text-xl md:text-2xl lg:text-3xl font-black bg-gradient-to-r from-yellow-400 via-orange-400 to-red-500 bg-clip-text text-transparent drop-shadow-2xl animate-pulse">
+                            🔥 JUST PEAK CINEMA 🔥
+                          </div>
+                        ) : (
+                          <div className="text-lg md:text-xl lg:text-2xl text-gray-100 font-medium italic bg-gradient-to-r from-gray-900/80 to-black/60 px-6 md:px-8 py-6 md:py-8 rounded-2xl border-2 border-gray-700/50 backdrop-blur-xl shadow-2xl hover:shadow-yellow-500/20 hover:border-yellow-500/30 transition-all duration-400">
+                            {selectedAnime.comment || 'No notes yet...'}
+                          </div>
+                        )}
                       </div>
                     </div>
+                  </div>
 
-                    {/* COMMENT SECTION */}
-                    <div className="pt-8 border-t-2 border-yellow-500/30">
-                      <div className="flex items-start gap-4">
-                        <div className="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-yellow-400 via-orange-400 to-red-400 rounded-2xl flex items-center justify-center font-black text-black text-xl md:text-2xl flex-shrink-0 shadow-2xl ring-4 ring-yellow-400/30">
-                          ME
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-lg md:text-xl font-semibold text-yellow-300 mb-4 tracking-wide">My Comment</h3>
-                          {selectedAnime.category === 'must watch' ? (
-                            <div className="text-xl md:text-2xl lg:text-3xl font-black bg-gradient-to-r from-yellow-400 via-orange-400 to-red-500 bg-clip-text text-transparent drop-shadow-2xl animate-pulse">
-                              🔥 JUST PEAK CINEMA 🔥
-                            </div>
-                          ) : (
-                            <div className="text-lg md:text-xl lg:text-2xl text-gray-100 font-medium italic bg-gradient-to-r from-gray-900/80 to-black/60 px-6 md:px-8 py-6 md:py-8 rounded-2xl border-2 border-gray-700/50 backdrop-blur-xl shadow-2xl hover:shadow-yellow-500/20 hover:border-yellow-500/30 transition-all duration-400">
-                              {selectedAnime.comment || 'No notes yet...'}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Buttons */}
-                    <div className="flex flex-col sm:flex-row gap-4 pt-8 border-t-2 border-yellow-500/20">
-                      {selectedAnime.trailerUrl && (
-                        <button
-                          onClick={() => window.open(selectedAnime.trailerUrl, '_blank', 'noopener,noreferrer')}
-                          className="flex-1 px-8 py-4 bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 text-black font-black text-base md:text-lg rounded-2xl hover:from-yellow-400 hover:via-orange-400 hover:to-red-400 shadow-2xl hover:shadow-yellow-500/50 transition-all duration-500 hover:-translate-y-2 hover:scale-[1.02] backdrop-blur-xl border border-yellow-400/50"
-                        >
-                          ▶ Watch Trailer
-                        </button>
-                      )}
+                  {/* Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-4 pt-8 border-t-2 border-yellow-500/20">
+                    {selectedAnime.trailerUrl && (
                       <button
-                        onClick={closeDetail}
-                        className="flex-1 px-8 py-4 border-2 border-yellow-500 text-yellow-400 font-semibold text-base md:text-lg rounded-2xl hover:bg-yellow-500/20 hover:border-yellow-400 hover:text-yellow-300 backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] shadow-xl hover:shadow-yellow-500/30"
+                        onClick={() => window.open(selectedAnime.trailerUrl, '_blank', 'noopener,noreferrer')}
+                        className="flex-1 px-8 py-4 bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 text-black font-black text-base md:text-lg rounded-2xl hover:from-yellow-400 hover:via-orange-400 hover:to-red-400 shadow-2xl hover:shadow-yellow-500/50 transition-all duration-500 hover:-translate-y-2 hover:scale-[1.02] backdrop-blur-xl border border-yellow-400/50"
                       >
-                        Back to List
+                        ▶ Watch Trailer
                       </button>
-                    </div>
+                    )}
+                    <button
+                      onClick={closeDetail}
+                      className="flex-1 px-8 py-4 border-2 border-yellow-500 text-yellow-400 font-semibold text-base md:text-lg rounded-2xl hover:bg-yellow-500/20 hover:border-yellow-400 hover:text-yellow-300 backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] shadow-xl hover:shadow-yellow-500/30"
+                    >
+                      Back to List
+                    </button>
                   </div>
                 </div>
               </div>
