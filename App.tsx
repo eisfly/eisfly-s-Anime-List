@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef, useCallback, memo } from 'react';
 import { ANIME_LIST, CATEGORIES } from './constants';
 import { Anime } from './types';
 
-/* ========== ULTRA SMOOTH CURSOR ========== */
+/* ========== ULTRA SMOOTH CURSOR - DETAIL VIEW OFF ========== */
 const Cursor = () => {
   const cursorRef = useRef<HTMLDivElement>(null);
 
@@ -21,6 +21,11 @@ const Cursor = () => {
     };
 
     const moveCursor = (e: MouseEvent) => {
+      // **LAG FIX**: Cursor komplett aus in Detail View
+      if (document.querySelector('[class*="detail"], [class*="modal"], .fixed.inset-0')) {
+        return;
+      }
+      
       if (ticking) return;
       requestAnimationFrame(() => updatePosition(e.clientX, e.clientY));
       ticking = true;
@@ -102,7 +107,6 @@ export default function App() {
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (selectedAnime || window.innerWidth <= 768) return;
 
-    // Throttled hover detection
     let found: string | null = null;
     for (const [id, el] of Object.entries(cardRefs.current)) {
       if (!el) continue;
@@ -185,9 +189,14 @@ export default function App() {
         )}
       </main>
 
-      {/* DETAIL VIEW - ABSOLUT LAG FREE */}
+      {/* DETAIL VIEW - CURSOR KOMPLETT AUS */}
       {selectedAnime && (
         <>
+          {/* Normaler Cursor WIEDER AN in Detail View */}
+          <style jsx>{`
+            body { cursor: default !important; }
+          `}</style>
+          
           <div 
             className="fixed inset-0 bg-black/98 backdrop-blur-sm z-[9998]"
             onClick={closeDetail}
@@ -200,7 +209,6 @@ export default function App() {
               <button
                 onClick={closeDetail}
                 className="absolute top-6 right-6 text-yellow-400 hover:text-yellow-300 text-3xl font-black z-10 p-3 rounded-2xl hover:bg-yellow-500/20 backdrop-blur-sm transition-all duration-300 shadow-xl hover:scale-110 hover:shadow-yellow-500/30"
-                aria-label="Close modal"
               >
                 ×
               </button>
