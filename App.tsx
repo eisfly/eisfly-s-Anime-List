@@ -1,50 +1,58 @@
-import React, { useEffect, useMemo, useRef, useState, useCallback, memo } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ANIME_LIST, CATEGORIES } from './constants';
 import { Anime } from './types';
 
-/* ========== ULTRA SMOOTH CURSOR (STATE-GESTEUERT) ========== */
-function Cursor({ enabled }: { enabled: boolean }) {
-  const cursorRef = useRef<HTMLDivElement>(null);
+/* ========== CUSTOM CURSOR (PIXELGENAU, NUR PC/MAUS) ========== */
+function Cursor({ enabled = true }: { enabled?: boolean }) {
+  const ref = useRef<HTMLDivElement>(null);
   const ticking = useRef(false);
 
   useEffect(() => {
-    // Mobile: kein Custom Cursor
     if (typeof window === 'undefined') return;
-    if (window.innerWidth <= 768) return;
 
-    // Wenn deaktiviert (z.B. Modal offen): normalen Cursor nutzen
+    // Touch/Handy: kein Custom Cursor
+    const isCoarse = window.matchMedia?.('(pointer: coarse)').matches ?? false;
+    if (isCoarse) return;
+
+    // Systemcursor aus, solange enabled
     document.body.style.cursor = enabled ? 'none' : 'default';
-
     if (!enabled) return;
 
-    const updatePosition = (x: number, y: number) => {
-      if (cursorRef.current) {
-        cursorRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    const update = (x: number, y: number) => {
+      const el = ref.current;
+      if (el) {
+        el.style.left = `${x}px`;
+        el.style.top = `${y}px`;
       }
       ticking.current = false;
     };
 
-    const moveCursor = (e: MouseEvent) => {
+    const onMove = (e: MouseEvent) => {
       if (ticking.current) return;
-      requestAnimationFrame(() => updatePosition(e.clientX, e.clientY));
       ticking.current = true;
+      requestAnimationFrame(() => update(e.clientX, e.clientY));
     };
 
-    document.addEventListener('mousemove', moveCursor, { passive: true });
+    document.addEventListener('mousemove', onMove, { passive: true });
 
     return () => {
-      document.removeEventListener('mousemove', moveCursor);
+      document.removeEventListener('mousemove', onMove);
       document.body.style.cursor = 'default';
     };
   }, [enabled]);
 
   if (typeof window === 'undefined') return null;
-  if (window.innerWidth <= 768) return null;
+  const isCoarse = window.matchMedia?.('(pointer: coarse)').matches ?? false;
+  if (isCoarse) return null;
   if (!enabled) return null;
 
   return (
-    <div ref={cursorRef} className="fixed top-0 left-0 pointer-events-none z-[9999] w-0 h-0">
-      <div className="w-6 h-6 rounded-full border-2 border-yellow-500/60 bg-yellow-500/20 backdrop-blur-xl flex items-center justify-center shadow-2xl">
+    <div
+      ref={ref}
+      className="fixed pointer-events-none z-[99999]"
+      style={{ transform: 'translate(-50%, -50%)' }}
+    >
+      <div className="w-6 h-6 rounded-full border-2 border-yellow-500/60 bg-yellow-500/20 backdrop-blur-md flex items-center justify-center shadow-2xl">
         <div className="w-2.5 h-2.5 bg-yellow-400 rounded-full shadow-lg" />
       </div>
     </div>
@@ -85,6 +93,7 @@ const AnimeCard = memo(function AnimeCard({
         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
         loading="lazy"
         decoding="async"
+        draggable={false}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent" />
       <div
@@ -112,9 +121,6 @@ export default function App() {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [selectedAnime, setSelectedAnime] = useState<Anime | null>(null);
 
-  // Cursor nur aktiv wenn KEIN Modal offen ist
-  const cursorEnabled = !selectedAnime;
-
   const filteredAnime = useMemo(() => {
     const q = search.trim().toLowerCase();
     return ANIME_LIST.filter((a) => {
@@ -134,7 +140,7 @@ export default function App() {
     setHoveredId(null);
   }, []);
 
-  // Escape zum Schließen + Body scroll lock im Modal
+  // Escape schließen + Body Scroll lock (verhindert janky scroll)
   useEffect(() => {
     if (!selectedAnime) return;
 
@@ -153,13 +159,14 @@ export default function App() {
   }, [selectedAnime, closeDetail]);
 
   return (
-    <div className="h-screen w-screen bg-gradient-to-br from-[#0a0a0a] via-[#030303] to-[#1a0a0a] text-white overflow-hidden">
-      <Cursor enabled={cursorEnabled} />
+    <div className="h-screen w-screen flex flex-col bg-gradient-to-br from-[#0a0a0a] via-[#030303] to-[#1a0a0a] text-white overflow-hidden">
+      {/* Cursor IMMER sichtbar auf PC (auch im Modal). Auf Mobile automatisch aus. */}
+      <Cursor enabled />
 
       {/* HEADER */}
       <header className="p-4 md:p-6 flex flex-col sm:flex-row gap-4 items-center justify-between border-b border-yellow-500/20 bg-black/40 backdrop-blur-md sticky top-0 z-40">
         <h1 className="text-yellow-500 font-black text-xl md:text-2xl tracking-wider drop-shadow-lg">
-          Anime Archive
+          Goats of Anime
         </h1>
 
         <div className="flex gap-2 md:gap-4 overflow-x-auto pb-1 -mb-1">
@@ -186,10 +193,10 @@ export default function App() {
         />
       </header>
 
-      {/* MAIN RAIL */}
+      {/* MAIN RAIL (nimmt automatisch Resthöhe) */}
       <main
         onMouseLeave={() => setHoveredId(null)}
-        className="flex items-center gap-2 overflow-x-auto h-[calc(100vh-140px)] px-4 md:px-10 py-4 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-yellow-500/30 scrollbar-track-transparent"
+        className="flex-1 min-h-0 flex items-center gap-2 overflow-x-auto px-4 md:px-10 py-4 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-yellow-500/30 scrollbar-track-transparent"
       >
         {filteredAnime.map((anime) => (
           <AnimeCard
@@ -197,7 +204,7 @@ export default function App() {
             anime={anime}
             active={hoveredId === anime.id}
             onSelect={() => openDetail(anime)}
-            onHover={() => !selectedAnime && setHoveredId(anime.id)}
+            onHover={() => setHoveredId(anime.id)}
             onUnhover={() => setHoveredId((cur) => (cur === anime.id ? null : cur))}
           />
         ))}
@@ -210,40 +217,44 @@ export default function App() {
         )}
       </main>
 
-      {/* DETAIL VIEW */}
+      {/* DETAIL VIEW (Performance-friendly) */}
       {selectedAnime && (
         <div
-          className="detail-modal fixed inset-0 bg-black/98 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+          className="detail-modal fixed inset-0 bg-black/95 z-[9999] flex items-center justify-center p-4"
           onClick={closeDetail}
+          role="dialog"
+          aria-modal="true"
         >
           <div
-            className="relative w-full max-w-6xl max-h-[95vh] bg-gradient-to-br from-[#0f0f0f] to-[#1a1a1a] border-2 border-yellow-500/50 rounded-3xl shadow-2xl backdrop-blur-xl overflow-hidden"
+            className="relative w-full max-w-6xl max-h-[95vh] bg-gradient-to-br from-[#0f0f0f] to-[#1a1a1a] border-2 border-yellow-500/50 rounded-3xl shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={closeDetail}
-              className="absolute top-6 right-6 text-yellow-400 hover:text-yellow-300 text-3xl font-black z-10 p-3 rounded-2xl hover:bg-yellow-500/20 backdrop-blur-sm transition-all duration-300 shadow-xl hover:scale-110 hover:shadow-yellow-500/30"
+              className="absolute top-4 md:top-6 right-4 md:right-6 text-yellow-400 hover:text-yellow-300 text-3xl font-black z-10 p-3 rounded-2xl hover:bg-yellow-500/20 transition-all duration-200 shadow-xl hover:scale-105"
               aria-label="Close"
             >
               ×
             </button>
 
-            <div className="p-8 md:p-12 max-h-[95vh] overflow-y-auto">
-              <h2 className="text-3xl md:text-5xl lg:text-6xl font-black text-yellow-400 mb-8 md:mb-12 drop-shadow-2xl text-center leading-tight tracking-tight bg-gradient-to-r from-yellow-400 to-yellow-200 bg-clip-text text-transparent">
+            <div className="p-6 md:p-10 max-h-[95vh] overflow-y-auto">
+              <h2 className="text-3xl md:text-5xl lg:text-6xl font-black text-yellow-400 mb-8 md:mb-10 drop-shadow-2xl text-center leading-tight tracking-tight">
                 {selectedAnime.title}
               </h2>
 
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 xl:gap-12 items-start">
                 {/* Cover */}
                 <div className="order-2 xl:order-1">
-                  <div className="relative group overflow-hidden rounded-2xl border-4 border-yellow-500/40 shadow-2xl hover:shadow-yellow-500/50 transition-all duration-500">
+                  <div className="relative overflow-hidden rounded-2xl border-4 border-yellow-500/40 shadow-2xl">
                     <img
                       src={selectedAnime.coverImageURL}
                       alt={selectedAnime.title}
-                      className="w-full aspect-[2/3] md:aspect-[3/4] object-cover group-hover:scale-110 transition-transform duration-700"
+                      className="w-full aspect-[2/3] md:aspect-[3/4] object-cover"
+                      loading="eager"
                       decoding="async"
+                      draggable={false}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent pointer-events-none" />
                   </div>
                 </div>
 
@@ -254,7 +265,7 @@ export default function App() {
                     <h3 className="text-lg md:text-xl font-semibold text-yellow-300 tracking-wide">
                       Description
                     </h3>
-                    <p className="text-sm md:text-base lg:text-lg text-gray-200 leading-relaxed max-h-32 overflow-y-auto">
+                    <p className="text-sm md:text-base lg:text-lg text-gray-200 leading-relaxed">
                       {selectedAnime.description}
                     </p>
                   </div>
@@ -268,7 +279,7 @@ export default function App() {
                       {selectedAnime.genres.map((g) => (
                         <span
                           key={g}
-                          className="px-4 py-2 border border-yellow-500/50 text-yellow-300 text-sm md:text-base rounded-xl bg-gradient-to-r from-yellow-500/5 to-orange-500/5 font-semibold backdrop-blur-sm hover:bg-yellow-500/20 transition-all duration-300 hover:scale-105"
+                          className="px-4 py-2 border border-yellow-500/50 text-yellow-300 text-sm md:text-base rounded-xl bg-yellow-500/10 font-semibold hover:bg-yellow-500/20 transition-all duration-200"
                         >
                           {g}
                         </span>
@@ -289,11 +300,11 @@ export default function App() {
                         </h3>
 
                         {selectedAnime.category === 'must watch' ? (
-                          <div className="text-xl md:text-2xl lg:text-3xl font-black bg-gradient-to-r from-yellow-400 via-orange-400 to-red-500 bg-clip-text text-transparent drop-shadow-2xl animate-pulse">
+                          <div className="text-xl md:text-2xl lg:text-3xl font-black bg-gradient-to-r from-yellow-400 via-orange-400 to-red-500 bg-clip-text text-transparent drop-shadow-2xl">
                             🔥 JUST PEAK CINEMA 🔥
                           </div>
                         ) : (
-                          <div className="text-lg md:text-xl lg:text-2xl text-gray-100 font-medium italic bg-gradient-to-r from-gray-900/80 to-black/60 px-6 md:px-8 py-6 md:py-8 rounded-2xl border-2 border-gray-700/50 backdrop-blur-xl shadow-2xl hover:shadow-yellow-500/20 hover:border-yellow-500/30 transition-all duration-400">
+                          <div className="text-lg md:text-xl lg:text-2xl text-gray-100 font-medium italic bg-gradient-to-r from-gray-900/80 to-black/60 px-6 md:px-8 py-6 md:py-8 rounded-2xl border-2 border-gray-700/50 shadow-2xl">
                             {selectedAnime.comment || 'No notes yet...'}
                           </div>
                         )}
@@ -308,7 +319,7 @@ export default function App() {
                         onClick={() =>
                           window.open(selectedAnime.trailerUrl, '_blank', 'noopener,noreferrer')
                         }
-                        className="flex-1 px-8 py-4 bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 text-black font-black text-base md:text-lg rounded-2xl hover:from-yellow-400 hover:via-orange-400 hover:to-red-400 shadow-2xl hover:shadow-yellow-500/50 transition-all duration-500 hover:-translate-y-2 hover:scale-[1.02] backdrop-blur-xl border border-yellow-400/50"
+                        className="flex-1 px-8 py-4 bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 text-black font-black text-base md:text-lg rounded-2xl shadow-2xl transition-all duration-300 hover:brightness-110 hover:-translate-y-1"
                       >
                         ▶ Watch Trailer
                       </button>
@@ -316,7 +327,7 @@ export default function App() {
 
                     <button
                       onClick={closeDetail}
-                      className="flex-1 px-8 py-4 border-2 border-yellow-500 text-yellow-400 font-semibold text-base md:text-lg rounded-2xl hover:bg-yellow-500/20 hover:border-yellow-400 hover:text-yellow-300 backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] shadow-xl hover:shadow-yellow-500/30"
+                      className="flex-1 px-8 py-4 border-2 border-yellow-500 text-yellow-400 font-semibold text-base md:text-lg rounded-2xl hover:bg-yellow-500/20 hover:border-yellow-400 hover:text-yellow-300 transition-all duration-200 shadow-xl"
                     >
                       Back to List
                     </button>
